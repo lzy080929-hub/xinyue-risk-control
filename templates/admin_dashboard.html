@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}数据概览｜信跃后台{% endblock %}
+{% block body_class %}admin-body{% endblock %}
+{% block body %}
+<div class="admin-shell">
+  <header class="admin-topbar">
+    <div class="brand compact">
+      <span class="brand-mark" aria-hidden="true">信跃</span>
+      <span class="brand-sub">研究数据后台</span>
+    </div>
+    <div class="admin-actions">
+      <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">刷新</a>
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button class="button button-quiet" type="submit">退出登录</button>
+      </form>
+    </div>
+  </header>
+
+  <main>
+    <div class="admin-heading">
+      <div>
+        <p class="eyebrow">信跃研究数据</p>
+        <h1>采集概览</h1>
+      </div>
+      <p id="sync-state" class="muted" role="status">每5秒自动刷新 · 最后加载：{{ generated_at|cn_time }}</p>
+    </div>
+
+    <section class="stat-grid" aria-label="采集统计">
+      <div class="stat-card">
+        <span class="stat-label">全部会话</span>
+        <strong id="stat-total">{{ total }}</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">已提交</span>
+        <strong id="stat-submitted">{{ submitted }}</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">填写中</span>
+        <strong id="stat-progress">{{ in_progress }}</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">正式 / 测试</span>
+        <strong><span id="stat-formal">{{ formal }}</span><span class="stat-divider">/</span><span id="stat-tests">{{ tests }}</span></strong>
+      </div>
+    </section>
+
+    <div class="admin-meta-row">
+      <span>最近行为批次上传：{{ last_batch_at|cn_time }}</span>
+      <span>下表显示筛选后最近200条记录；导出会包含所选范围的全部记录。</span>
+    </div>
+
+    <section class="detail-card"><h2>筛选记录</h2>
+      <form method="get" class="record-filters">
+        <label>类型<select name="kind"><option value="all" {% if filters.get('kind','all') == 'all' %}selected{% endif %}>全部</option><option value="formal" {% if filters.get('kind') == 'formal' %}selected{% endif %}>正式</option><option value="test" {% if filters.get('kind') == 'test' %}selected{% endif %}>测试</option></select></label>
+        <label>状态<select name="status"><option value="all" {% if filters.get('status','all') == 'all' %}selected{% endif %}>全部</option><option value="submitted" {% if filters.get('status') == 'submitted' %}selected{% endif %}>已提交</option><option value="in_progress" {% if filters.get('status') == 'in_progress' %}selected{% endif %}>填写中</option></select></label>
+        <label>开始日期<input type="date" name="start" value="{{ filters.get('start','') }}" /></label>
+        <label>结束日期<input type="date" name="end" value="{{ filters.get('end','') }}" /></label>
+        <label>实验版本<input name="version" maxlength="64" value="{{ filters.get('version','') }}" placeholder="留空显示全部版本" /></label>
+        <label>来源<input name="source" maxlength="64" value="{{ filters.get('source','') }}" placeholder="例如 class_a" /></label>
+        <button class="button button-primary" type="submit">应用筛选</button><a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">清除</a>
+      </form>
+    </section>
+
+    <section class="detail-card"><h2>导出研究数据</h2>
+      <p class="muted">默认只导出已提交的正式记录。不同页面版本和历史数据保留各自字段含义；行为明细仅包含申请阶段。</p>
+      <form method="post" action="{{ url_for('admin.export_csv') }}" class="record-filters">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        {% for key in ['start','end','version','source'] %}<input type="hidden" name="{{ key }}" value="{{ filters.get(key,'') }}" />{% endfor %}
+        <label>类型<select name="kind"><option value="formal">正式</option><option value="test">测试</option><option value="all">全部</option></select></label>
+        <label>状态<select name="status"><option value="submitted">已提交</option><option value="in_progress">填写中</option><option value="all">全部</option></select></label>
+        <button class="button button-primary" name="format" value="analysis">导出分析CSV</button>
+        <button class="button button-secondary" name="format" value="events">导出申请行为明细</button>
+      </form>
+    </section>
+
+    <section class="table-card" aria-labelledby="records-title">
+      <div class="table-heading">
+        <h2 id="records-title">参与记录</h2>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">参与编号</th>
+              <th scope="col">类型</th>
+              <th scope="col">状态</th>
+              <th scope="col">填写进度</th>
+              <th scope="col">创建时间</th>
+              <th scope="col">最后保存</th>
+              <th scope="col">提交时间</th>
+              <th scope="col">行为批次</th>
+              <th scope="col">详情</th>
+            </tr>
+          </thead>
+          <tbody id="records-body">
+            {% for participant in participants %}
+            <tr>
+              <td class="nowrap"><code>{{ participant.public_id }}</code></td>
+              <td>
+                {% if participant.is_test %}
+                <span class="badge badge-test">测试</span>
+                {% else %}
+                <span class="badge badge-formal">正式</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if participant.status == "submitted" %}
+                <span class="badge badge-submitted">已提交</span>
+                {% else %}
+                <span class="badge badge-progress">填写中</span>
+                {% endif %}
+              </td>
+              <td>{{ participant.progress }}%</td>
+              <td class="nowrap">{{ participant.created_at|cn_time }}</td>
+              <td class="nowrap">
+                {% if participant.draft %}{{ participant.draft.saved_at|cn_time }}{% else %}—{% endif %}
+              </td>
+              <td class="nowrap">{{ participant.submitted_at|cn_time }}</td>
+              <td>
+                {% if participant.behavior_summary %}
+                  {{ participant.behavior_summary.received_batches }} 批 /
+                  {{ participant.behavior_summary.received_events }} 条
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                <a
+                  class="table-link"
+                  href="{{ url_for('admin.participant_detail', public_id=participant.public_id) }}"
+                >查看</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="9" class="empty-state">
+                数据库中还没有参与会话。请先从参与者页面填写并保存一条测试记录。
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="notice notice-soft admin-footnote">
+      “填写中”不等于正式样本；“正式”记录也仍需在分析前按实验版本、完成度与质量标识筛选。测试记录不会计入正式采集数量。
+    </div>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='admin_dashboard.js') }}" defer></script>
+{% endblock %}

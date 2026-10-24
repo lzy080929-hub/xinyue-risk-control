@@ -1,0 +1,28 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.Python
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 本地开发数据库、备份与验证产物
+instance/
+*.sqlite3
+*.sqlite3-journal
+*.db
+verification_artifacts/
+*.log
+
+# 体量过大、含个人材料或运行时生成，不宜进仓库或部署包
+train.csv
+test.csv
+behavior_logs.json
+data/behavior_logs.csv
+
+model_plots/
+dist/

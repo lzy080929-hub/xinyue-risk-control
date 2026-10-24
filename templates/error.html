@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ status }}｜信跃{% endblock %}
+{% block body_class %}participant-body{% endblock %}
+{% block body %}
+<main class="error-wrap">
+  <section class="card error-card">
+    <p class="error-code">{{ status }}</p>
+    <h1>{{ message }}</h1>
+    <p class="lead">请返回原页面重试；已经填写但未被服务器确认的内容不要自行清除。</p>
+    <a class="button button-primary" href="{{ url_for('index') }}">返回参与页面</a>
+  </section>
+</main>
+{% endblock %}

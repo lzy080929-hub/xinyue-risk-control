@@ -1,0 +1,23 @@
+# Reuse the existing service. Set secrets in Render; no database purchase is created here.
+# This file is deployment configuration, not evidence that a deployment has succeeded.
+services:
+  - type: web
+    name: xinyue-risk-control
+    runtime: python
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: python scripts/start_production.py
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ALLOW_TEST_MODE
+        value: "0"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false

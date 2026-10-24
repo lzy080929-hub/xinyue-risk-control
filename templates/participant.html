@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+{% block title %}模拟信贷申请｜信跃{% endblock %}
+{% block body_class %}participant-body{% endblock %}
+{% block body %}
+<div class="page-wrap">
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">信跃</span>
+      <span class="brand-sub">大学生创新训练项目</span>
+    </div>
+    <span class="status-pill">
+      {% if test_mode %}测试模式 · 不计入正式样本{% else %}模拟研究 · 非真实贷款{% endif %}
+    </span>
+  </header>
+
+  <main>
+    <section id="intro-panel" class="card intro-card" aria-labelledby="intro-title">
+      {% if test_mode %}
+      <div class="notice notice-warning">
+        <strong>测试模式：</strong>本次创建的是测试会话，会以 TEST- 开头并在后台标记为“测试”，不会计入正式采集数量。
+      </div>
+      {% endif %}
+      <p class="eyebrow">研究参与说明</p>
+      <h1 id="intro-title">模拟信贷申请</h1>
+      <p class="lead">
+        这是一次用于金融素养与信贷决策研究的模拟申请。你不需要提供真实姓名、身份证、银行卡或通讯录信息。
+      </p>
+
+      <div class="notice notice-key">
+        <strong>这不是贷款产品。</strong>
+        页面不会查询征信、不会作出授信决定，也不会生成个人违约概率或信用等级。
+      </div>
+
+      <h2>参与者需要完成什么</h2>
+      <ul class="plain-list">
+        <li>填写一组简化的大学生背景、收支与模拟贷款情境信息。</li>
+        <li>完成 29 道关于还款看法的 1—7 分题。题目没有对错，请按真实想法作答。</li>
+        <li>检查后点击最终提交，并等待服务器返回保存回执；失败时会保留答案，可重试。</li>
+        <li>填写内容会自动保存。你可以返回上一步修改，也可以刷新页面恢复当前浏览器的未提交进度。</li>
+      </ul>
+
+      <h2>研究数据与隐私</h2>
+      <ul class="plain-list">
+        <li>同意后，系统才会创建参与会话并保存你主动提交的研究数据。</li>
+        <li>本阶段保存申请表、29 题原始答案、自动保存草稿和服务器提交状态，不采集键入正文。</li>
+        <li>本版本尚未启用行为事件采集；后续版本启用前会更新说明和版本号。</li>
+        <li>数据保存在受保护的数据库中，仅研究管理员可查看和后续导出。</li>
+        <li>
+          若中途退出，已自动保存的匿名草稿可能仍保留在数据库中；由于不收集联系方式，研究者无法按真实身份定位你的记录。请勿填写可识别个人身份的信息。
+        </li>
+        <li>成功提交后，页面会显示参与编号与服务器回执编号，可自行留存。</li>
+        <li>参与者页面不显示量表得分，也不提供信用评价或贷款结果。</li>
+      </ul>
+
+      <div class="consent-box">
+        <label class="check-row">
+          <input id="consent-checkbox" type="checkbox" />
+          <span>
+            我已阅读以上说明，自愿参加本次研究，并同意在同意之后保存我填写的模拟申请信息、29 题答案、自动保存草稿和必要的页面交互数据。
+          </span>
+        </label>
+        <button id="start-button" class="button button-primary" type="button" disabled>
+          同意并开始
+        </button>
+        <p id="start-error" class="form-message form-error" role="alert" hidden></p>
+      </div>
+
+      <p class="version-line">
+        同意文本版本 {{ consent_version }} · 实验版本 {{ experiment_version }} ·
+        表单版本 {{ form_version }} · 量表版本 {{ scale_version }}
+      </p>
+    </section>
+
+    <section id="application-panel" class="card" aria-labelledby="application-title" hidden>
+      <div class="session-strip">
+        <div>
+          <span class="meta-label">
+            参与编号{% if test_mode %} · 测试会话{% endif %}
+          </span>
+          <strong id="participant-code" class="participant-code">—</strong>
+          <button
+            id="copy-code-button"
+            class="text-button"
+            type="button"
+            data-copy-target="participant-code"
+          >
+            复制
+          </button>
+        </div>
+        <span id="save-state" class="save-state" aria-live="polite">等待填写</span>
+      </div>
+
+      <p class="eyebrow">研究情境</p>
+      <h1 id="application-title">填写模拟申请与还款看法</h1>
+      <p class="lead">
+        申请信息仅用于研究，不构成真实授信。量表部分了解你对还款的一般看法，没有标准答案，也不会在参与者页面计分。
+      </p>
+
+      <ol id="step-nav" class="step-nav" aria-label="填写步骤">
+        <li id="step-nav-1" class="is-active" aria-current="step">
+          <span class="step-number">1</span><span>申请信息</span>
+        </li>
+        <li id="step-nav-2">
+          <span class="step-number">2</span><span>29 题看法</span>
+        </li>
+        <li id="step-nav-3">
+          <span class="step-number">3</span><span>检查提交</span>
+        </li>
+      </ol>
+
+      <form id="application-form" autocomplete="off" novalidate>
+        <section
+          id="step-application"
+          class="form-step"
+          aria-labelledby="step-application-title"
+        >
+          <div class="step-heading">
+            <p class="eyebrow">第一步</p>
+            <h2 id="step-application-title">申请信息</h2>
+          </div>
+
+          <fieldset class="form-section">
+            <legend>一、在读与收支情况</legend>
+            <p class="section-note">
+              月收入和月负债可留空。若填写，请使用人民币元，并区分“没有”与“未作答”：0 表示没有，空白表示不愿或不便作答。
+            </p>
+
+            <div class="field">
+              <label for="grade">当前年级 <span class="required-mark">必填</span></label>
+              <select id="grade" name="grade">
+                <option value="">请选择</option>
+                <option value="freshman">本科一年级</option>
+                <option value="sophomore">本科二年级</option>
+                <option value="junior">本科三年级</option>
+                <option value="senior">本科四年级</option>
+                <option value="graduate">研究生及以上</option>
+                <option value="other_student">其他在读学生</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="monthly_income">每月可支配收入（元） <span class="optional-mark">可留空</span></label>
+              <input
+                id="monthly_income"
+                name="monthly_income"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                max="100000"
+                step="1"
+                placeholder="例如：2000"
+              />
+              <p class="field-help">可计入生活费、兼职收入、奖学金等，按每月平均估算。</p>
+            </div>
+
+            <div class="field">
+              <label for="monthly_debt">当前每月需偿还负债（元） <span class="optional-mark">可留空</span></label>
+              <input
+                id="monthly_debt"
+                name="monthly_debt"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                max="1000000"
+                step="1"
+                placeholder="没有可填 0"
+              />
+              <p class="field-help">这里记录的是每月实际需要偿还的金额，不是总负债余额。</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-section">
+            <legend>二、模拟贷款情境</legend>
+            <p class="section-note">
+              以下由你为研究情境自行设定，系统不会进行真实审批，也不会给出“通过/拒绝”结论。
+            </p>
+
+            <div class="field">
+              <label for="loan_amount">模拟贷款金额（元） <span class="required-mark">必填</span></label>
+              <input
+                id="loan_amount"
+                name="loan_amount"
+                type="number"
+                inputmode="numeric"
+                min="100"
+                max="100000"
+                step="1"
+                placeholder="100—100000"
+              />
+            </div>
+
+            <div class="field">
+              <label for="loan_term_months">模拟期限 <span class="required-mark">必填</span></label>
+              <select id="loan_term_months" name="loan_term_months">
+                <option value="">请选择</option>
+                <option value="3">3 个月</option>
+                <option value="6">6 个月</option>
+                <option value="12">12 个月</option>
+                <option value="24">24 个月</option>
+                <option value="36">36 个月</option>
+                <option value="60">60 个月</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="loan_purpose">模拟用途 <span class="required-mark">必填</span></label>
+              <select id="loan_purpose" name="loan_purpose">
+                <option value="">请选择</option>
+                <option value="tuition">学费或学习相关支出</option>
+                <option value="living">生活周转</option>
+                <option value="training">培训或考试</option>
+                <option value="device">学习设备</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+          </fieldset>
+
+          <p id="step1-error" class="form-message form-error" role="alert" hidden></p>
+          <div class="step-actions">
+            <button id="next-to-survey" class="button button-primary button-block" type="button">
+              继续回答 29 题
+            </button>
+          </div>
+        </section>
+
+        <section
+          id="step-survey"
+          class="form-step"
+          aria-labelledby="step-survey-title"
+          hidden
+        >
+          <div class="step-heading">
+            <p class="eyebrow">第二步</p>
+            <h2 id="step-survey-title">你对还款的看法</h2>
+          </div>
+
+          <p class="section-note">
+            以下共 29 题，描述的是你对自己还款态度、周围人的看法、能力和意愿的一般感受。请按真实想法选择，不需要推测“正确答案”。
+          </p>
+
+          <div class="scale-guide" aria-labelledby="scale-guide-title">
+            <h3 id="scale-guide-title">1—7 分分别表示</h3>
+            <div class="scale-legend">
+              {% for value, label in likert_labels.items() %}
+              <span><b>{{ value }}</b>{{ label }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="survey-heading-row">
+            <h2>作答题目</h2>
+            <span id="survey-progress" class="survey-progress">0 / 29 已作答</span>
+          </div>
+          <p id="step2-error" class="form-message form-error" role="alert" hidden></p>
+
+          <div id="scale-questions" class="scale-questions">
+            {% for number, text in survey_items %}
+            <fieldset
+              class="scale-question"
+              id="scale-q-{{ '%02d'|format(number) }}"
+              data-question-number="{{ number }}"
+            >
+              <legend>
+                <span class="question-number">{{ number }}.</span>
+                <span>{{ text }}</span>
+              </legend>
+              <div class="likert-row">
+                {% for value, label in likert_labels.items() %}
+                <label class="likert-option">
+                  <input
+                    type="radio"
+                    name="rs_q{{ '%02d'|format(number) }}"
+                    value="{{ value }}"
+                    aria-label="第 {{ number }} 题，{{ value }} 分，{{ label }}"
+                  />
+                  <span aria-hidden="true">{{ value }}</span>
+                </label>
+                {% endfor %}
+              </div>
+              <div class="likert-caption" aria-hidden="true">
+                <span>1 · 非常不同意</span>
+                <span>7 · 非常同意</span>
+              </div>
+            </fieldset>
+            {% endfor %}
+          </div>
+
+          <p id="step2-error-bottom" class="form-message form-error" role="alert" hidden></p>
+          <div class="step-actions step-actions-split">
+            <button id="back-to-application" class="button button-secondary" type="button">
+              返回修改申请信息
+            </button>
+            <button id="next-to-review" class="button button-primary" type="button">
+              继续检查提交
+            </button>
+          </div>
+        </section>
+
+        <section
+          id="step-review"
+          class="form-step"
+          aria-labelledby="step-review-title"
+          hidden
+        >
+          <div class="step-heading">
+            <p class="eyebrow">第三步</p>
+            <h2 id="step-review-title">检查并提交</h2>
+          </div>
+
+          <div class="review-summary">
+            <div class="review-heading">
+              <h3>申请信息</h3>
+              <button class="text-button" type="button" data-goto-step="1">
+                返回修改
+              </button>
+            </div>
+            <dl class="review-list">
+              <dt>当前年级</dt><dd id="review-grade">—</dd>
+              <dt>每月可支配收入</dt><dd id="review-income">—</dd>
+              <dt>每月需偿还负债</dt><dd id="review-debt">—</dd>
+              <dt>模拟贷款金额</dt><dd id="review-amount">—</dd>
+              <dt>模拟期限</dt><dd id="review-term">—</dd>
+              <dt>模拟用途</dt><dd id="review-purpose">—</dd>
+            </dl>
+          </div>
+
+          <div class="review-summary">
+            <div class="review-heading">
+              <h3>还款看法</h3>
+              <button class="text-button" type="button" data-goto-step="2">
+                返回修改
+              </button>
+            </div>
+            <p id="review-scale-state">—</p>
+            <p class="field-help">
+              量表答案已全部完成。参与者页面不展示 ATR、SN、PBC、LRI 分数；研究计分由服务器在提交时完成。
+            </p>
+          </div>
+
+          <div class="notice notice-soft">
+            提交即表示你确认以上内容。成功页只在服务器明确确认数据库保存后出现；若出现错误，页面不会清空答案。
+          </div>
+
+          <label class="check-row final-check">
+            <input id="final_confirmed" name="final_confirmed" type="checkbox" />
+            <span>我确认以上内容由我自愿填写，了解这是模拟研究，不构成真实贷款申请或个人信用评价。</span>
+          </label>
+
+          <p id="submit-error" class="form-message form-error" role="alert" hidden></p>
+          <button id="submit-button" class="button button-primary button-block" type="submit">
+            最终确认并提交
+          </button>
+          <p class="final-back">
+            <button class="text-button" type="button" data-goto-step="2">返回修改量表答案</button>
+          </p>
+        </section>
+      </form>
+
+      <p class="version-line">
+        实验版本 {{ experiment_version }} · 量表版本 {{ scale_version }} ·
+        行为指标版本 {{ behavior_metrics_version }} · 表单版本 {{ form_version }}
+      </p>
+    </section>
+
+    <section
+      id="success-panel"
+      class="card success-card"
+      aria-labelledby="success-title"
+      tabindex="-1"
+      hidden
+    >
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <p class="eyebrow">服务器已确认</p>
+      <h1 id="success-title">提交成功</h1>
+      <p class="lead">
+        研究数据库已保存申请表和 29 题原始答案，并返回保存回执。你可以关闭本页，无需重复提交。
+      </p>
+
+      <dl class="receipt-list">
+        <div>
+          <dt>参与编号</dt>
+          <dd>
+            <span id="success-participant-id">—</span>
+            <button
+              class="text-button"
+              type="button"
+              data-copy-target="success-participant-id"
+            >复制</button>
+          </dd>
+        </div>
+        <div>
+          <dt>回执编号</dt>
+          <dd>
+            <span id="success-receipt-id">—</span>
+            <button
+              class="text-button"
+              type="button"
+              data-copy-target="success-receipt-id"
+            >复制</button>
+          </dd>
+        </div>
+        <div>
+          <dt>服务器提交时间</dt>
+          <dd><span id="success-submitted-at">—</span>（北京时间）</dd>
+        </div>
+      </dl>
+
+      <div class="notice notice-key">
+        本页面不展示量表分数、违约概率、信用等级或授信结果。研究结果需要由研究者在完整数据上另行分析。
+      </div>
+      <p class="muted">
+        如果刚才网络异常但此页已经出现，说明服务器已确认保存。若未出现该页，请保留原页面并重试，不要仅凭“按钮已点击”认为提交成功。
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>信跃 · 大学生创新训练项目 · 研究用途</p>
+    <p>本项目不提供真实借贷服务，不构成征信、授信或投资建议。</p>
+  </footer>
+</div>
+
+<script
+  src="{{ url_for('static', filename='participant.js') }}"
+  data-consent-version="{{ consent_version }}"
+  data-experiment-version="{{ experiment_version }}"
+  data-is-test="{{ 'true' if test_mode else 'false' }}"
+  defer
+></script>
+{% endblock %}

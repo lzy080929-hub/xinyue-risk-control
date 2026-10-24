@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}{{ participant.public_id }}｜信跃后台{% endblock %}
+{% block body_class %}admin-body{% endblock %}
+{% block body %}
+<div class="admin-shell">
+  <header class="admin-topbar">
+    <div class="brand compact">
+      <span class="brand-mark" aria-hidden="true">信跃</span>
+      <span class="brand-sub">研究数据后台</span>
+    </div>
+    <div class="admin-actions">
+      <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">返回列表</a>
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button class="button button-quiet" type="submit">退出登录</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="detail-wrap">
+    <div class="admin-heading">
+      <div>
+        <p class="eyebrow">参与记录详情</p>
+        <h1><code>{{ participant.public_id }}</code></h1>
+      </div>
+      <div class="badge-row">
+        {% if participant.is_test %}
+        <span class="badge badge-test">测试</span>
+        {% else %}
+        <span class="badge badge-formal">正式</span>
+        {% endif %}
+        {% if participant.status == "submitted" %}
+        <span class="badge badge-submitted">已提交</span>
+        {% else %}
+        <span class="badge badge-progress">填写中</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <section class="detail-grid">
+      <div class="detail-card">
+        <h2>会话与版本</h2>
+        <dl class="kv-list">
+          <dt>状态</dt><dd>{{ participant.status }}</dd>
+          <dt>填写进度</dt><dd>{{ participant.progress }}%</dd>
+          <dt>同意版本</dt><dd><code>{{ participant.consent_version }}</code></dd>
+          <dt>同意时间</dt><dd>{{ participant.consented_at|cn_time }}</dd>
+          <dt>实验版本</dt><dd><code>{{ participant.experiment_version }}</code></dd>
+          <dt>量表版本</dt><dd><code>{{ participant.scale_version }}</code></dd>
+          <dt>行为指标版本</dt><dd><code>{{ participant.behavior_metrics_version }}</code></dd>
+          <dt>创建时间</dt><dd>{{ participant.created_at|cn_time }}</dd>
+          <dt>最后活动</dt><dd>{{ participant.last_seen_at|cn_time }}</dd>
+          <dt>提交时间</dt><dd>{{ participant.submitted_at|cn_time }}</dd>
+          <dt>回执编号</dt><dd><code>{{ participant.receipt_id or "—" }}</code></dd>
+        </dl>
+      </div>
+
+      <div class="detail-card">
+        <h2>记录状态</h2>
+        <dl class="kv-list">
+          <dt>草稿版本</dt>
+          <dd>{% if participant.draft %}{{ participant.draft.server_revision }}{% else %}—{% endif %}</dd>
+          <dt>草稿保存时间</dt>
+          <dd>{% if participant.draft %}{{ participant.draft.saved_at|cn_time }}{% else %}—{% endif %}</dd>
+          <dt>最终提交表</dt>
+          <dd>{{ "有" if participant.submission else "无" }}</dd>
+          <dt>内容哈希</dt>
+          <dd class="break-all"><code>{{ participant.submission.content_hash if participant.submission else "—" }}</code></dd>
+          <dt>行为批次</dt>
+          <dd>{% if participant.behavior_summary %}{{ participant.behavior_summary.received_batches }} 批 / {{ participant.behavior_summary.received_events }} 条{% else %}—{% endif %}</dd>
+          <dt>行为完整状态</dt>
+          <dd>{{ participant.behavior_summary.status if participant.behavior_summary else "未建立汇总" }}</dd>
+          <dt>逐题量表答案</dt>
+          <dd>
+            {{ scale_answered_count }} / 29 题
+            {% if historical_without_scale %}
+            （阶段一未采集）
+            {% elif participant.submission %}
+            （已保存原始答案）
+            {% elif participant.draft %}
+            （草稿）
+            {% endif %}
+          </dd>
+          <dt>计分快照</dt>
+          <dd>
+            {% if participant.submission and scale_scores %}
+            有 · <code>{{ participant.submission.scoring_version }}</code>
+            {% elif historical_without_scale %}
+            无（阶段一历史记录）
+            {% else %}
+            无
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="detail-card">
+      <h2>{{ "最终提交内容" if participant.submission else "最近草稿内容" }}</h2>
+      {% if original_form %}
+      <dl class="kv-list">
+      {% for key, label in [('nickname','称呼或昵称'),('age','年龄'),('education','学历'),('occupation','职业或身份'),('monthly_income','月可支配收入（元）'),('total_debt','当前总负债（元）'),('debt_ratio','总负债／月收入（%）'),('loan_amount','模拟贷款金额（元）'),('loan_term','模拟期限（月）'),('loan_purpose','模拟用途'),('interest_rate','模拟年化利率（%）'),('interest_rate_confirmed','已确认利率说明')] %}
+        <dt>{{ label }}</dt><dd>{{ form_data.get(key) if form_data.get(key) is not none else '未作答' }}</dd>
+      {% endfor %}
+      </dl>
+      {% else %}
+      <dl class="kv-list">
+        <dt>年级</dt>
+        <dd>{{ grade_labels.get(form_data.get("grade"), form_data.get("grade") or "未填写") }}</dd>
+        <dt>每月可支配收入</dt>
+        <dd>
+          {% if form_data.get("monthly_income") is not none %}
+          {{ form_data.get("monthly_income") }} 元
+          {% else %}未作答{% endif %}
+        </dd>
+        <dt>每月需偿还负债</dt>
+        <dd>
+          {% if form_data.get("monthly_debt") is not none %}
+          {{ form_data.get("monthly_debt") }} 元
+          {% else %}未作答{% endif %}
+        </dd>
+        <dt>模拟贷款金额</dt>
+        <dd>
+          {% if form_data.get("loan_amount") is not none %}
+          {{ form_data.get("loan_amount") }} 元
+          {% else %}未填写{% endif %}
+        </dd>
+        <dt>模拟期限</dt>
+        <dd>
+          {% if form_data.get("loan_term_months") %}
+          {{ form_data.get("loan_term_months") }} 个月
+          {% else %}未填写{% endif %}
+        </dd>
+        <dt>模拟用途</dt>
+        <dd>{{ purpose_labels.get(form_data.get("loan_purpose"), form_data.get("loan_purpose") or "未填写") }}</dd>
+      </dl>
+      {% endif %}
+    </section>
+
+    <section class="detail-card" id="behavior-results"><h2>申请行为记录</h2>
+      <p class="muted">仅统计申请阶段的字段行为；页面可见时间不等同于认真阅读，修改次数不代表诚信程度。</p>
+      <dl class="kv-list">
+      {% for key, label in [('application_visible_ms','申请页面可见时长（毫秒）'),('survey_visible_ms','量表页面可见时长（毫秒）'),('total_elapsed_ms','总历时（毫秒）'),('hidden_duration_ms','切后台时长（毫秒）'),('back_navigation_count','申请阶段返回次数'),('non_sequential_fill_count','首次焦点跳填次数'),('related_field_switch_count','收入与总负债字段切换次数'),('resume_count','页面恢复次数'),('quality_flags','质量标识')] %}
+        <dt>{{ label }}</dt><dd>{{ behavior_metrics.get(key) if behavior_metrics.get(key) is not none else '未采集' }}</dd>
+      {% endfor %}
+      </dl>
+      <div class="table-scroll"><table><thead><tr><th>字段</th><th>聚焦时长(ms)</th><th>输入事件</th><th>删除事件</th><th>输入后删除</th><th>粘贴</th><th>重访</th><th>返回编辑</th></tr></thead><tbody>
+      {% for field, values in behavior_metrics.get('fields', {}).items() %}<tr><td>{{ field }}</td><td>{{ values.focus_ms }}</td><td>{{ values.input_count }}</td><td>{{ values.delete_count if values.delete_count is not none else '不支持' }}</td><td>{{ values.delete_after_input_count if values.delete_after_input_count is not none else '不支持' }}</td><td>{{ values.paste_count }}</td><td>{{ values.revisit_count }}</td><td>{{ values.return_edit_count }}</td></tr>{% else %}<tr><td colspan="8">暂无申请行为记录。</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+
+    {% if historical_without_scale %}
+    <section class="detail-card">
+      <h2>量表数据</h2>
+      <div class="notice notice-warning admin-notice">
+        <strong>阶段一历史记录，未采集量表答案。</strong>
+        本页如实显示该记录没有逐题答案和分量表计分快照；系统不会为历史记录补造答案、倒推分数或回填量表版本。
+      </div>
+    </section>
+    {% else %}
+    <section id="scale-results" class="detail-card">
+      <h2>四个分量表结果</h2>
+      {% if subscale_rows %}
+      <p class="muted score-intro">
+        由服务器在最终提交时按 <code>{{ participant.submission.scale_version }}</code> /
+        <code>{{ participant.submission.scoring_version }}</code> 计分。反向题按
+        <code>8 - 原始分</code> 转换；缺失答案不按 0 分处理。
+      </p>
+      <div class="score-grid">
+        {% for row in subscale_rows %}
+        <article class="score-card">
+          <h3>{{ row.label }}</h3>
+          <p class="score-total">
+            <span>总分</span>
+            <strong>{{ row.total if row.total is not none else "—" }}</strong>
+          </p>
+          <dl class="score-meta">
+            <div>
+              <dt>均分</dt>
+              <dd>
+                {{ "%.2f"|format(row.mean) if row.mean is not none else "—" }}
+              </dd>
+            </div>
+            <div>
+              <dt>有效题数</dt>
+              <dd>
+                {{ row.valid_count if row.valid_count is not none else "—" }}
+                /
+                {{ row.expected_count if row.expected_count is not none else "—" }}
+              </dd>
+            </div>
+          </dl>
+        </article>
+        {% endfor %}
+      </div>
+      <p class="field-help score-note">
+        这些是研究量表分数，不是个人信用评分、违约概率、信用等级或授信结论。均分只按有效题计算。
+      </p>
+      {% elif participant.submission %}
+      <div class="notice notice-warning admin-notice">
+        该记录已提交，但没有可读取的分量表计分快照。请检查数据完整性，本页不会自行补算或编造结果。
+      </div>
+      {% else %}
+      <div class="notice notice-soft admin-notice">
+        该会话尚未最终提交。草稿答案已保存，但服务器不在草稿阶段计算或展示四个分量表分数。
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="detail-card">
+      <div class="answer-heading">
+        <div>
+          <h2>29 题原始答案</h2>
+          <p class="muted">
+            {% if participant.submission %}
+            已提交：原始分和服务器计分结果均来自最终提交时的数据库记录。
+            {% else %}
+            草稿：仅展示自动保存的原始答案；最终计分在提交时由服务器完成。
+            {% endif %}
+            空白表示未作答，不计为 0 分。
+          </p>
+        </div>
+        <span class="badge badge-formal">{{ scale_answered_count }} / 29 已作答</span>
+      </div>
+      <div class="table-scroll">
+        <table class="answer-table">
+          <caption class="visually-hidden">29 题逐题原始答案与计分</caption>
+          <thead>
+            <tr>
+              <th scope="col">题号</th>
+              <th scope="col">题目原文</th>
+              <th scope="col">原始分</th>
+              <th scope="col">计分后</th>
+              <th scope="col">类型</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in scale_rows %}
+            <tr class="{{ 'answer-missing' if row.raw is none else '' }}">
+              <td class="nowrap">{{ row.number }}</td>
+              <td class="answer-text">{{ row.text }}</td>
+              <td class="nowrap">
+                {% if row.raw is not none %}{{ row.raw }}{% else %}<span class="muted">未作答</span>{% endif %}
+              </td>
+              <td class="nowrap">
+                {% if row.scored is not none %}
+                {{ row.scored }}
+                {% elif participant.submission %}
+                <span class="muted">—</span>
+                {% else %}
+                <span class="muted">提交后计分</span>
+                {% endif %}
+              </td>
+              <td class="nowrap">
+                {% if row.reverse %}
+                <span class="badge badge-reverse" title="计分时按 8 - 原始分转换">反向题</span>
+                {% else %}
+                <span class="muted">正向题</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="detail-card">
+      <details>
+        <summary>查看申请数据原始 JSON</summary>
+        <pre class="json-view">{{ form_data|tojson(indent=2) }}</pre>
+      </details>
+    </section>
+
+    {% if not historical_without_scale %}
+    <section class="detail-card">
+      <details>
+        <summary>查看量表答案与计分快照 JSON</summary>
+        <pre class="json-view">{{ scale_debug|tojson(indent=2) }}</pre>
+      </details>
+    </section>
+    {% endif %}
+
+    <p class="muted admin-footnote">
+      说明：本页只用于研究数据核查，不生成也不展示个人违约概率、信用等级或授信结果。量表分数不应被解释为对参与者的个人信用评价。
+    </p>
+  </main>
+</div>
+{% endblock %}

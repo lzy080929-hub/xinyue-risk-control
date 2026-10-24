@@ -1,0 +1,3 @@
+# Render / Linux 部署：Flask + PostgreSQL 驱动 + WSGI 服务
+-r requirements-web.txt
+gunicorn>=22.0,<24
