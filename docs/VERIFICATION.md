@@ -23,7 +23,7 @@
 
 公网只读检查工具`scripts/verify_deployment.py`已运行：首页、健康端点、界面样式和后台API均未得到HTTP响应；输出read_only_checks_passed=false。没有创建线上测试/正式会话，没有据此认定公网部署成功。用户确认线上PostgreSQL连接尚未配置或不确定；后续需在账号中确认持久数据库与环境变量。
 
-本轮GitHub远端读取恢复正常，执行时仍为空仓库。代码整理至`codex/original-8page-data-collection`分支；实际远端版本以仓库分支记录为准。该源码分支与Render实际采用的版本需要分别核对。
+本轮GitHub远端曾读取成功，执行时仍为空仓库。代码已在本机`codex/original-8page-data-collection`分支形成提交`d2397c0`，随后推送因无法连接github.com:443失败，不能称为已上传。已提供同内容允许列表发布包。源码上传与Render实际采用的版本需要分别核对。
 
 新增交付：实验/界面版本记录、技术报告内容依据、实际截图、上线验收表、可重复的浏览器与只读公网检查工具。RRT按用户选择暂不加入。PostgreSQL实库、实体手机/微信和Render重启保留均待实际环境验收。
 
