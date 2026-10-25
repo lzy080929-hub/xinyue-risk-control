@@ -62,7 +62,7 @@ EVENT_TYPES = {
     "submit_attempt",
     "page_duration", "field_duration", "field_first_input", "field_revisit",
     "field_edit_return", "non_sequential", "field_switch", "hidden_duration",
-    "delete_after_input", "session_resume",
+    "delete_after_input", "session_resume", "interface_change",
 }
 EVENT_PHASES = {"application", "survey"}
 EVENT_VISIBILITY = {"visible", "hidden"}
@@ -281,8 +281,12 @@ def validate_consent_payload(payload: Any, expected_consent_version: str) -> dic
     if not isinstance(is_test, bool):
         raise _invalid("is_test", "必须是布尔值")
     context = require_object(data.get("client_context", {}), "client_context")
-    _require_exact_keys(context, set(), {"device_type", "browser", "viewport_width", "viewport_height", "input_type_supported"})
+    _require_exact_keys(context, set(), {"device_type", "browser", "viewport_width", "viewport_height", "input_type_supported", "ui_version"})
     cleaned = {}
+    if "ui_version" in context:
+        if not isinstance(context["ui_version"], str) or context["ui_version"] not in {"bank-application-v1"}:
+            raise _invalid("ui_version", "界面版本无效")
+        cleaned["ui_version"] = context["ui_version"]
     for key in ("viewport_width", "viewport_height"):
         if key in context:
             cleaned[key] = _as_int(context[key], key, minimum=1, maximum=20000)

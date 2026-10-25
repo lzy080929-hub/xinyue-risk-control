@@ -20,6 +20,8 @@ EXPERIMENT_VERSION = "xinyue-original-v3"
 SCALE_VERSION = SURVEY_SCALE_VERSION
 BEHAVIOR_METRICS_VERSION = "behavior-original-v2"
 FORM_VERSION = "original-eight-page-v1"
+# Presentation has its own version; field meanings and study protocol stay stable.
+UI_VERSION = "bank-application-v1"
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -111,5 +113,6 @@ def build_runtime_config(instance_path: str) -> dict[str, object]:
         "SCALE_VERSION": SCALE_VERSION,
         "BEHAVIOR_METRICS_VERSION": BEHAVIOR_METRICS_VERSION,
         "FORM_VERSION": FORM_VERSION,
+        "UI_VERSION": UI_VERSION,
         "LOCAL_SETUP_FILE": str(BASE_DIR / ".env"),
     }

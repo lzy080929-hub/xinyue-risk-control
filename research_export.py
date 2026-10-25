@@ -10,7 +10,7 @@ ANALYSIS_FIELDS = list(dict.fromkeys(list(ORIGINAL_FIELDS) + list(FORM_FIELDS)))
 BEHAVIOR_FIELDS = ("application_visible_ms", "survey_visible_ms", "total_elapsed_ms", "hidden_duration_ms", "back_navigation_count", "non_sequential_fill_count", "related_field_switch_count", "resume_count", "submit_attempt_count")
 TRACKED_FIELDS = ("nickname", "age", "education", "occupation", "monthly_income", "total_debt", "debt_ratio", "loan_amount", "loan_term", "loan_purpose", "interest_rate")
 FIELD_METRICS = ("focus_ms", "focus_count", "input_count", "delete_count", "delete_after_input_count", "paste_count", "revisit_count", "return_edit_count", "first_input_latency_ms")
-BASE_HEADERS = ["participant_id", "is_test", "status", "source", "created_at", "submitted_at", "experiment_version", "scale_version", "behavior_metrics_version", "form_version", "receipt_id", "behavior_status", "received_batches", "received_events", "expected_batches", "expected_events", "dropped_events", "quality_flags", "device_type", "browser", "viewport_width", "viewport_height"]
+BASE_HEADERS = ["participant_id", "is_test", "status", "source", "created_at", "submitted_at", "experiment_version", "scale_version", "behavior_metrics_version", "form_version", "ui_version", "receipt_id", "behavior_status", "received_batches", "received_events", "expected_batches", "expected_events", "dropped_events", "quality_flags", "device_type", "browser", "viewport_width", "viewport_height"]
 HEADERS = BASE_HEADERS + ANALYSIS_FIELDS + [f"rs_q{i:02d}" for i in range(1, 30)] + [f"{key}_{metric}" for key in ("ATR", "SN", "PBC", "LRI") for metric in ("total", "mean", "valid_count")] + list(BEHAVIOR_FIELDS) + [f"page_{i}_dwell_ms" for i in range(1, 9)] + [f"{field}_{metric}" for field in TRACKED_FIELDS for metric in FIELD_METRICS]
 
 
@@ -35,7 +35,7 @@ def analysis_row(participant):
         row["behavior_status" if key == "status" else key] = getattr(summary, key, None)
     metrics = summary.metrics or {} if summary else {}
     row["quality_flags"] = metrics.get("quality_flags", [])
-    for key in ("device_type", "browser", "viewport_width", "viewport_height"):
+    for key in ("device_type", "browser", "viewport_width", "viewport_height", "ui_version"):
         row[key] = (participant.client_context or {}).get(key)
     raw = {answer.item_number: answer.raw_score for answer in participant.scale_answers} if submitted else {}
     for i in range(1, 30):

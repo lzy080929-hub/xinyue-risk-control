@@ -46,6 +46,7 @@
           <dt>同意版本</dt><dd><code>{{ participant.consent_version }}</code></dd>
           <dt>同意时间</dt><dd>{{ participant.consented_at|cn_time }}</dd>
           <dt>实验版本</dt><dd><code>{{ participant.experiment_version }}</code></dd>
+          <dt>初始界面版本</dt><dd><code>{{ (participant.client_context or {}).get('ui_version') or '历史记录未采集' }}</code></dd>
           <dt>量表版本</dt><dd><code>{{ participant.scale_version }}</code></dd>
           <dt>行为指标版本</dt><dd><code>{{ participant.behavior_metrics_version }}</code></dd>
           <dt>创建时间</dt><dd>{{ participant.created_at|cn_time }}</dd>

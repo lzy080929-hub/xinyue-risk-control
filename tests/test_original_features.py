@@ -35,6 +35,32 @@ def test_original_eight_page_flow_and_local_assets(client):
     assert page.count('class="scale-question"') == 29
 
 
+def test_interface_version_is_recorded_without_backfilling_history(app, client):
+    from research_export import analysis_row
+    response = client.post("/api/sessions", json={"consent": True, "consent_version": CONSENT_VERSION,
+        "is_test": True, "client_context": {"ui_version": "bank-application-v1"}})
+    assert response.status_code == 201
+    public_id = response.get_json()["data"]["participant_id"]
+    old_id, _ = session_credentials(client)
+    with app.app_context():
+        participants = {p.public_id: p for p in db.session.scalars(select(ParticipantSession))}
+        assert analysis_row(participants[public_id])["ui_version"] == "bank-application-v1"
+        assert analysis_row(participants[old_id])["ui_version"] is None
+    assert client.post("/api/sessions", json={"consent": True, "consent_version": CONSENT_VERSION,
+        "client_context": {"ui_version": {"unrestricted": "data"}}}).status_code == 400
+
+
+def test_cross_interface_resume_is_flagged_separately(app, client):
+    public_id, token = session_credentials(client)
+    response = client.post(f"/api/sessions/{public_id}/behavior-batches", json={
+        "batch_id": "interface-resume-batch", "batch_seq": 1,
+        "events": [{"type": "session_resume"}, {"type": "interface_change"}]}, headers=auth(token))
+    assert response.status_code == 200
+    with app.app_context():
+        participant = db.session.scalar(select(ParticipantSession).where(ParticipantSession.public_id == public_id))
+        assert participant.behavior_summary.metrics["quality_flags"] == ["interface_changed_during_session", "page_resumed"]
+
+
 def test_original_form_keeps_total_debt_and_computes_ratio(app, client):
     public_id, token = session_credentials(client)
     response = finish(client, public_id, token, form=dict(FORM, debt_ratio=1))

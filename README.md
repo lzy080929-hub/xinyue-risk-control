@@ -2,6 +2,8 @@
 
 当前版本以原有的8页表单为基础，保留灰底白色表单、上一页/下一页、利率确认和两页量表。新增数据库保存、填写过程同步、研究者后台、CSV导出与Render部署入口。
 
+2026年10月25日增加银行风格的界面优化：深蓝页头、四段流程提示与8页进度、清晰的确认区和量表选择状态。表单字段、页面顺序与题项不变。新建会话记录界面版本`bank-application-v1`；历史记录不补写，跨界面恢复另作质量标记。详见`docs/EXPERIMENT_RECORD.md`。
+
 ## 功能
 
 1. 知情同意后创建参与会话；同意前不发送研究数据。
@@ -62,6 +64,10 @@ python -m venv .venv
 ```
 
 测试使用独立临时数据库。浏览器验证与测试结果另见`docs/VERIFICATION.md`；数据口径见`docs/DATA_DICTIONARY.md`，操作与演示见`docs/USER_GUIDE.md`。阶段二旧说明存档为`docs/HISTORY_STAGE2.md`。
+
+需要重复浏览器验收时，可安装可选的`requirements-browser.txt`依赖（还需已安装Chrome），运行`python scripts/verify_browser.py`。脚本创建独立测试数据库，结果放在被忽略的`verification_artifacts/`，不接触正式样本。无需把该目录上传到仓库。
+
+结项附件内容依据见`docs/结项技术报告_系统实现.md`；账号内发布步骤、实体设备验收表见`docs/上线验收与交接.md`。这些文档不代替学校的结题报告书模板与指定成果证明。
 
 ## 部署
 

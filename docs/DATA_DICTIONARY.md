@@ -4,6 +4,8 @@
 
 实验`xinyue-original-v3`；表单`original-eight-page-v1`；行为`behavior-original-v2`；29题量表仍为`repayment-29-v1`。旧版本答案保留原版本，不回填或混称新样本。
 
+界面独立标记为`bank-application-v1`，保存在`client_context.ui_version`，分析CSV列为`ui_version`。该值表示会话开始时前端报告的界面版本；历史未采集时空白。没有改动研究字段、题项与计分，因此未改写实验/表单版本。
+
 一行分析CSV代表一次参与会话。公开参与编号不是身份认证凭证，不能保证一个自然人只有一次参与。测试记录以`TEST-`开头，并有`is_test=1`。
 
 时间戳以UTC带Z导出，后台按北京时间显示。所有`*_ms`单位为毫秒。空白通常表示未作答、未观察或历史版本未采集；不要统一替换为0。`is_test`和确认字段导出为0/1。
@@ -71,6 +73,7 @@ LRI是自报还款意向分量表，不是真实违约标签。四种构念不�
 - `received/not_started`表示尚未声明完整性，不能自动当完整。
 - `dropped_events`为缓冲达到上限时未排入队列的事件计数；不默默隐藏。
 - `quality_flags`中`page_resumed`表示恢复过，`input_type_unsupported`表示浏览器不提供删除类型（删除相关字段为缺失），`event_buffer_overflow`表示事件被丢弃。
+- `interface_change`事件仅含既有事件元数据，不携带输入内容；产生`interface_changed_during_session`质量标记，表示刷新恢复时发现界面版本改变或旧暂存缺少版本。初始界面版本保持不变，分析时不要把这类记录混作全程同一界面。
 
 粗粒度设备类型、浏览器类别、视口尺寸用于解释设备差异，不生成设备指纹。来源`source`为招募渠道标签，不能包含个人信息。所有前端计时和自报信息都可能有误差，应保留原始事件与版本。
 

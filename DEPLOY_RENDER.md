@@ -27,6 +27,7 @@
 - Build Command：`pip install -r requirements-render.txt`
 - Start Command：`python scripts/start_production.py`
 - Health Check Path：`/health`
+- Python版本：仓库根目录`.python-version`指定3.14，与本轮本机验证的次版本一致。若Render服务已有`PYTHON_VERSION`变量，它优先于该文件；发布前核对并统一。旧`runtime.txt`保留供追溯，不作为Render当前版本配置依据。
 - 使用单worker、多线程部署；应用内登录限流是单进程实现，多实例需另配共享限流和迁移协调。
 - `render.yaml`提供相同服务配置，数据库连接串由现有资源提供。它没有创建数据库的定义；更改前先在Render预览将发生的资源变化。
 
@@ -54,4 +55,5 @@
 - [Flask部署](https://render.com/docs/deploy-flask)
 - [Blueprint配置](https://render.com/docs/blueprint-spec)
 - [PostgreSQL连接](https://render.com/docs/postgresql-creating-connecting)
+- [Python版本设置](https://render.com/docs/python-version)
 - [临时文件系统与免费服务限制](https://render.com/docs/free)

@@ -12,7 +12,10 @@
   let state = { page: 1, participantId: null, token: null, seq: 0, submissionKey: null, behavior: null, submitting: false, submitted: false };
   let tracker = null, draftTimer = null, retryTimer = null, draftPromise = null, dirty = false;
 
-  function showError(message = "") { error.textContent = message; error.hidden = !message; }
+  function showError(message = "") {
+    error.textContent = message; error.hidden = !message;
+    if (!message) form.querySelectorAll('[aria-invalid="true"]').forEach(el => { el.removeAttribute("aria-invalid"); el.closest(".field")?.classList.remove("has-error"); });
+  }
   function saved(message, failed = false) { saveState.textContent = message; saveState.className = failed ? "is-error" : "is-saved"; }
   function inputFor(name) { return form.elements.namedItem(name); }
   function rawForm() {
@@ -30,7 +33,7 @@
   }
   function persist() {
     if (!state.token || state.submitted) return;
-    try { sessionStorage.setItem(KEY, JSON.stringify({ ...state, form: rawForm(), answers: answers(), experiment: form.dataset.experimentVersion })); }
+    try { sessionStorage.setItem(KEY, JSON.stringify({ ...state, uiVersion: form.dataset.uiVersion, form: rawForm(), answers: answers(), experiment: form.dataset.experimentVersion })); }
     catch (_) { saved("浏览器暂存不可用，请保持本页打开并留意保存状态。", true); }
   }
   function ratio() {
@@ -49,6 +52,15 @@
     state.page = page;
     pages.forEach(el => { el.hidden = Number(el.dataset.page) !== page; });
     byId("step-indicator").textContent = `第 ${page} / 8 页`;
+    byId("application-progress").value = page;
+    const names = ["阅读参与说明", "填写申请人信息", "填写收入与负债", "填写模拟贷款需求", "阅读并确认模拟利率", "核对申请信息", "填写还款看法 · 第1—15题", "填写还款看法 · 第16—29题"];
+    byId("step-name").textContent = names[page - 1];
+    const stage = page === 1 ? 1 : page <= 5 ? 2 : page === 6 ? 3 : 4;
+    document.querySelectorAll("[data-stage]").forEach(el => {
+      const number = Number(el.dataset.stage);
+      el.classList.toggle("is-current", number === stage); el.classList.toggle("is-complete", number < stage);
+      if (number === stage) el.setAttribute("aria-current", "step"); else el.removeAttribute("aria-current");
+    });
     prev.disabled = page === 1 || state.submitting;
     next.hidden = page === 8; submit.hidden = page !== 8;
     next.disabled = state.submitting; submit.disabled = state.submitting;
@@ -68,8 +80,10 @@
     if (invalid) {
       if (state.page !== pageNumber) render(pageNumber);
       invalid.closest(".scale-question")?.classList.add("is-missing");
+      const label = invalid.closest(".field")?.querySelector("label")?.textContent.trim();
+      showError(pageNumber >= 7 ? "请完成本页所有题目后继续。" : label ? `请检查“${label}”：${invalid.validationMessage}` : "请先勾选本页确认项后继续。" );
+      invalid.setAttribute("aria-invalid", "true"); invalid.closest(".field")?.classList.add("has-error");
       invalid.focus(); invalid.reportValidity();
-      showError(pageNumber >= 7 ? "请完成本页所有题目后继续。" : "请检查本页必填项和数字范围。" );
       return false;
     }
     return true;
@@ -89,18 +103,19 @@
     } finally { clearTimeout(timeout); }
   }
   const sessionPath = suffix => `/api/sessions/${encodeURIComponent(state.participantId)}${suffix}`;
-  function startTracker(restored = false) {
+  function startTracker(restored = false, interfaceChanged = false) {
     if (tracker) tracker.stop();
     tracker = new window.XinyueBehaviorTracker({
       form, page: state.page, state: restored ? state.behavior : null,
       persist: behavior => { state.behavior = behavior; persist(); },
       send: (batch, keepalive) => request(sessionPath("/behavior-batches"), { method: "POST", body: JSON.stringify(batch), keepalive }),
     });
+    if (interfaceChanged) { tracker.record("interface_change"); tracker.persist(); }
   }
   function context() {
     const ua = navigator.userAgent.toLowerCase();
     const browser = /micromessenger/.test(ua) ? "wechat" : /edg\//.test(ua) ? "edge" : /firefox/.test(ua) ? "firefox" : /chrome|crios/.test(ua) ? "chrome" : /safari/.test(ua) ? "safari" : "other";
-    return { device_type: innerWidth < 600 ? "mobile" : innerWidth < 1000 ? "tablet" : "desktop", browser, viewport_width: innerWidth, viewport_height: innerHeight, input_type_supported: "InputEvent" in window && "inputType" in InputEvent.prototype };
+    return { device_type: innerWidth < 600 ? "mobile" : innerWidth < 1000 ? "tablet" : "desktop", browser, viewport_width: innerWidth, viewport_height: innerHeight, input_type_supported: "InputEvent" in window && "inputType" in InputEvent.prototype, ui_version: form.dataset.uiVersion };
   }
   async function createSession() {
     if (!validPage(1)) return;
@@ -143,7 +158,7 @@
     state.submitted = true; state.submitting = false; tracker?.stop();
     clearTimeout(draftTimer); clearTimeout(retryTimer);
     try { sessionStorage.removeItem(KEY); } catch (_) { /* Server receipt remains authoritative. */ }
-    form.hidden = true; byId("step-indicator").hidden = true;
+    form.hidden = true; byId("journey").hidden = true;
     byId("receipt-participant").textContent = receipt.participant_id;
     byId("receipt-id").textContent = receipt.receipt_id;
     byId("behavior-receipt").textContent = receipt.behavior_status === "complete" ? "本次填写记录已同步保存。" : "申请和量表已保存，部分填写过程记录需要研究者核查。";
@@ -207,7 +222,7 @@
         if (current.status === "submitted") { showSuccess(current.receipt); return; }
         state.seq = Math.max(state.seq, current.draft_seq || 0);
       } catch (failure) { if (failure.code === "protocol_version_mismatch") { showError(failure.message); return; } }
-      startTracker(true); saved("已恢复本标签页的填写进度"); scheduleSave();
+      startTracker(true, stored.uiVersion !== form.dataset.uiVersion); saved("已恢复本标签页的填写进度"); scheduleSave();
     } else render(1, false);
   }
   void restore();

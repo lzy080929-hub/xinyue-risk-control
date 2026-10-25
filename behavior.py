@@ -24,6 +24,9 @@ def summarize_events(events: list[dict], context: dict | None = None) -> dict:
             result["hidden_duration_ms"] += duration
         elif kind == "session_resume":
             result["resume_count"] += 1
+        elif kind == "interface_change":
+            if "interface_changed_during_session" not in result["quality_flags"]:
+                result["quality_flags"].append("interface_changed_during_session")
         elif kind == "submit_attempt":
             result["submit_attempt_count"] += 1
         if phase != "application":

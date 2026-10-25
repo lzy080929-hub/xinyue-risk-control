@@ -80,6 +80,7 @@ def create_app(test_config: dict | None = None) -> Flask:
             scale_version=SCALE_VERSION,
             behavior_metrics_version=BEHAVIOR_METRICS_VERSION,
             form_version=FORM_VERSION,
+            ui_version=app.config["UI_VERSION"],
             test_mode=test_mode,
             survey_items=tuple(enumerate(SURVEY_ITEMS, start=1)),
             likert_labels=LIKERT_LABELS,
