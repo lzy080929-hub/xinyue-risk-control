@@ -75,7 +75,11 @@ python -m venv .venv
 
 现有站点地址：<https://xinyue-risk-control.onrender.com>。代码仓库由用户指定为<https://github.com/lzy080929-hub/xinyue-risk-control>。
 
-本地完成和测试不代表该公网服务已经更新。按照`DEPLOY_RENDER.md`为现有服务配置持久数据库与密钥，发布后再核验移动网络、微信浏览器、写入和重启保留。
+2026年10月26日已实际发布到上述Render站点，运行提交为`8067c0d736cbcf2ddfcbf3d2e9faeece624e3aab`。已在公网Chrome移动视口完成8页、29题、提交回执、重复提交及服务更换实例后的回执保留验证；健康与后台未授权保护检查通过。维护分支为`codex/original-8page-data-collection`，自动发布关闭，后续修改仍须验证后发布。
+
+当前按用户选择使用免费PostgreSQL试运行，数据库于2026年11月25日16:58（北京时间）到期，需在此之前导出并迁移或升级。自己演示使用`/?test=1`，不计入正式样本。实体手机/微信、研究者密码登录后的CSV下载和PostgreSQL完整备份恢复仍需另行实际核验。日常打开方式见`docs/打开网站.md`。
+
+本地后续修改不会自动更新公网服务。发布维护说明见`DEPLOY_RENDER.md`；移动网络、微信浏览器和长期数据保留仍需按真实环境核验。
 
 生产入口：`python scripts/start_production.py`。它先迁移持久数据库，再启动单worker、多线程Gunicorn。健康检查`/health`同时检查连接与必需表列。`render.yaml`不自动购买数据库，也不自动发布代码变更。
 

@@ -2,9 +2,11 @@
 
 目标服务：`xinyue-risk-control`，公开地址 <https://xinyue-risk-control.onrender.com>。保持现有服务及域名，不必新建同名服务。
 
+当前状态（2026年10月26日）：已完成官方账号授权、代码上传、环境配置、免费PostgreSQL接入和实际发布。运行提交`8067c0d`，分支`codex/original-8page-data-collection`。已验证公网提交及服务实例更换后同一TEST回执保留。免费数据库于2026年11月25日16:58（北京时间）到期。以下步骤供后续维护，不需要再次新建数据库或重设现有密钥。
+
 ## 发布前
 
-1. 核对现有服务的Settings → Repository和Branch。用户提供的仓库为<https://github.com/lzy080929-hub/xinyue-risk-control>；开发时读取到该仓库尚无提交，需要再次确认它是否确为当前服务的来源。
+1. 核对现有服务的Settings → Repository和Branch。当前仓库为<https://github.com/lzy080929-hub/xinyue-risk-control>，分支为`codex/original-8page-data-collection`；仓库已存在本轮发布提交。
 2. 先保存当前线上已有数据。如果旧服务仍把数据写入应用本地JSON/CSV，重启或重新部署可能丢失这些文件。先通过现有可用导出或托管平台Shell/备份功能取回，不要仅凭本机已有一份日志就认定线上数据也已备份。
 3. 新版先使用独立测试数据库或预发布服务验证；不要将测试过程写进正式数据库。
 4. 托管平台登录和数据库连接串应在你自己的控制台操作，不发送到聊天或源码里。此文档不声称已配置任何数据库或已完成部署。
