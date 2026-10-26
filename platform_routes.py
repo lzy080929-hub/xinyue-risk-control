@@ -38,6 +38,7 @@ from platform_content import (
     PLATFORM_VERSION,
 )
 from survey import LIKERT_LABELS, SURVEY_ITEMS
+from protocols import CONSENT_V4, EXPERIMENT_V4, FORM_V4, UI_V4, PLEDGE_VERSION, PLEDGE_TEXT, RRT_VERSION, RRT_QUESTION, assigned_terms
 
 bp = Blueprint("platform", __name__)
 
@@ -69,19 +70,30 @@ def home():
 
 @bp.get("/apply")
 def apply():
-    """Render the existing eight-page research application unchanged."""
+    return _render_application(legacy=False)
+
+
+@bp.get("/apply/legacy")
+def legacy_apply():
+    """Old same-tab drafts keep their frozen rate choice and protocol."""
+    return _render_application(legacy=True)
+
+
+def _render_application(*, legacy):
     test_mode = bool(
         current_app.config.get("ALLOW_TEST_MODE")
         and request.args.get("test") == "1"
     )
     return render_template(
-        "original_application.html",
-        consent_version=CONSENT_VERSION,
-        experiment_version=EXPERIMENT_VERSION,
+        "legacy_application_v3.html" if legacy else "original_application.html",
+        consent_version=CONSENT_VERSION if legacy else CONSENT_V4,
+        experiment_version=EXPERIMENT_VERSION if legacy else EXPERIMENT_V4,
         scale_version=SCALE_VERSION,
         behavior_metrics_version=BEHAVIOR_METRICS_VERSION,
-        form_version=FORM_VERSION,
-        ui_version=current_app.config["UI_VERSION"],
+        form_version=FORM_VERSION if legacy else FORM_V4,
+        ui_version=current_app.config["UI_VERSION"] if legacy else UI_V4,
+        terms=assigned_terms(), pledge_version=PLEDGE_VERSION, pledge_text=PLEDGE_TEXT,
+        rrt_version=RRT_VERSION, rrt_question=RRT_QUESTION,
         test_mode=test_mode,
         survey_items=tuple(enumerate(SURVEY_ITEMS, start=1)),
         likert_labels=LIKERT_LABELS,

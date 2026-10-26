@@ -29,6 +29,11 @@ def summarize_events(events: list[dict], context: dict | None = None) -> dict:
                 result["quality_flags"].append("interface_changed_during_session")
         elif kind == "submit_attempt":
             result["submit_attempt_count"] += 1
+        if phase == "pledge":
+            pledge = result.setdefault("pledge", {"copy_count": 0, "paste_count": 0, "input_count": 0, "confirm_count": 0})
+            feature = {"pledge_copy": "copy_count", "pledge_paste": "paste_count", "pledge_input": "input_count", "pledge_confirm": "confirm_count"}.get(kind)
+            if feature:
+                pledge[feature] += 1
         if phase != "application":
             continue
         for event_type, feature in (("page_back", "back_navigation_count"), ("non_sequential", "non_sequential_fill_count"), ("field_switch", "related_field_switch_count")):

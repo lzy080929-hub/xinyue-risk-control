@@ -281,7 +281,7 @@ def main():
                     application_page.locator("#loan-application-form").get_attribute(
                         "data-ui-version"
                     )
-                    == "bank-application-v1"
+                    == "bank-application-v2"
                 )
                 assert application_page.locator(".scale-question").count() == 29
                 assert application_page.evaluate(

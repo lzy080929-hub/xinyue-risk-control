@@ -6,12 +6,14 @@ import json
 from models import iso_utc
 from validation import ORIGINAL_FIELDS, FORM_FIELDS
 
-ANALYSIS_FIELDS = list(dict.fromkeys(list(ORIGINAL_FIELDS) + list(FORM_FIELDS)))
+ANALYSIS_FIELDS = list(dict.fromkeys(list(ORIGINAL_FIELDS) + list(FORM_FIELDS))) + ["scenario_version", "rate_assignment_method", "rate_basis", "repayment_method", "additional_fees", "pledge_version", "pledge_confirmed"]
 BEHAVIOR_FIELDS = ("application_visible_ms", "survey_visible_ms", "total_elapsed_ms", "hidden_duration_ms", "back_navigation_count", "non_sequential_fill_count", "related_field_switch_count", "resume_count", "submit_attempt_count")
 TRACKED_FIELDS = ("nickname", "age", "education", "occupation", "monthly_income", "total_debt", "debt_ratio", "loan_amount", "loan_term", "loan_purpose", "interest_rate")
 FIELD_METRICS = ("focus_ms", "focus_count", "input_count", "delete_count", "delete_after_input_count", "paste_count", "revisit_count", "return_edit_count", "first_input_latency_ms")
 BASE_HEADERS = ["participant_id", "is_test", "status", "source", "created_at", "submitted_at", "experiment_version", "scale_version", "behavior_metrics_version", "form_version", "ui_version", "receipt_id", "behavior_status", "received_batches", "received_events", "expected_batches", "expected_events", "dropped_events", "quality_flags", "device_type", "browser", "viewport_width", "viewport_height"]
 HEADERS = BASE_HEADERS + ANALYSIS_FIELDS + [f"rs_q{i:02d}" for i in range(1, 30)] + [f"{key}_{metric}" for key in ("ATR", "SN", "PBC", "LRI") for metric in ("total", "mean", "valid_count")] + list(BEHAVIOR_FIELDS) + [f"page_{i}_dwell_ms" for i in range(1, 9)] + [f"{field}_{metric}" for field in TRACKED_FIELDS for metric in FIELD_METRICS]
+PLEDGE_METRICS = ("copy_count", "paste_count", "input_count", "confirm_count")
+HEADERS += ["pledge_" + key for key in PLEDGE_METRICS]
 
 
 def safe_cell(value):
@@ -51,6 +53,8 @@ def analysis_row(participant):
     for field in TRACKED_FIELDS:
         for metric in FIELD_METRICS:
             row[f"{field}_{metric}"] = metrics.get("fields", {}).get(field, {}).get(metric)
+    for key in PLEDGE_METRICS:
+        row["pledge_" + key] = metrics.get("pledge", {}).get(key)
     return row
 
 

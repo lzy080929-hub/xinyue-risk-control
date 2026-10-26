@@ -59,7 +59,7 @@ def test_fresh_database_migration_applies(tmp_path):
         version = connection.execute(
             "select version_num from alembic_version"
         ).fetchone()
-        assert version and version[0] == "a83c6f2d901e"
+        assert version and version[0] == "b6d208a134f0"
         assert (
             connection.execute(
                 "select count(*) from participant_sessions"
@@ -175,7 +175,9 @@ def test_stage_two_migration_preserves_existing_stage_one_record(tmp_path):
         version = connection.execute(
             "select version_num from alembic_version"
         ).fetchone()
-        assert version and version[0] == "a83c6f2d901e"
+        assert version and version[0] == "b6d208a134f0"
+        assert connection.execute("select terms_snapshot from participant_sessions").fetchone()[0] is None
+        assert connection.execute("select count(*) from rrt_responses").fetchone()[0] == 0
         submission = connection.execute(
             """
             select submission_key, form_version, scale_version,

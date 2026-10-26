@@ -9,6 +9,7 @@
       <span class="brand-sub">研究数据后台</span>
     </div>
     <div class="admin-actions">
+      <a class="button button-secondary" href="{{ url_for('rrt.summary_page') }}">RRT群体统计</a>
       <a class="button button-secondary" href="{{ url_for('admin.dashboard') }}">刷新</a>
       <form method="post" action="{{ url_for('admin.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />

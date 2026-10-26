@@ -333,7 +333,7 @@
     var hasDraft = false;
     try {
       // Presence only: never read, parse, or transmit the application draft.
-      hasDraft = Boolean(window.sessionStorage.getItem(APPLICATION_SESSION_KEY));
+      hasDraft = Boolean(window.sessionStorage.getItem(APPLICATION_SESSION_KEY) || window.sessionStorage.getItem("xinyue.original-eight-page.v4"));
     } catch (_error) {
       hasDraft = false;
     }

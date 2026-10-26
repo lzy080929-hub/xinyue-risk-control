@@ -6,6 +6,7 @@ from typing import Any
 
 from errors import ApiError
 from survey import ITEM_COUNT, LIKERT_MAX, LIKERT_MIN
+from protocols import FORM_V4, PLEDGE_VERSION, UI_V4
 
 GRADE_LABELS = {
     "freshman": "本科一年级",
@@ -63,8 +64,9 @@ EVENT_TYPES = {
     "page_duration", "field_duration", "field_first_input", "field_revisit",
     "field_edit_return", "non_sequential", "field_switch", "hidden_duration",
     "delete_after_input", "session_resume", "interface_change",
+    "pledge_copy", "pledge_paste", "pledge_input", "pledge_confirm",
 }
-EVENT_PHASES = {"application", "survey"}
+EVENT_PHASES = {"application", "survey", "pledge"}
 EVENT_VISIBILITY = {"visible", "hidden"}
 EVENT_KEYS = {
     "type",
@@ -128,9 +130,28 @@ def _enum(value: Any, field: str, allowed: dict[str, str]) -> str | None:
     return value
 
 
-def normalize_form(raw: Any, *, final: bool) -> dict[str, Any]:
+def normalize_form(raw: Any, *, final: bool, terms: dict | None = None) -> dict[str, Any]:
     """Validate fields and preserve blank as null. Unknown keys are rejected."""
     form = require_object(raw, "form")
+    if terms is not None:
+        if form.get("form_layout") != FORM_V4:
+            raise _invalid("form_layout", "请使用本会话对应的申请版本")
+        extra = {"pledge_version", "pledge_confirmed"}
+        if set(form) - set(ORIGINAL_FIELDS) - extra:
+            raise _invalid("form", "存在未允许的字段")
+        if form.get("pledge_version") != PLEDGE_VERSION or terms.get("pledge_version") != PLEDGE_VERSION:
+            raise _invalid("pledge_version", "确认语版本无效")
+        confirmed = form.get("pledge_confirmed", False)
+        if not isinstance(confirmed, bool):
+            raise _invalid("pledge_confirmed", "必须是布尔值")
+        if final and not confirmed:
+            raise ApiError(400, "pledge_required", "请完成本人承诺并勾选确认")
+        base = {key: value for key, value in form.items() if key not in extra}
+        base["form_layout"] = "original-eight-page-v1"
+        normalized = normalize_original_form(base, final=final, assigned_rate=terms["interest_rate"])
+        normalized.update(terms)
+        normalized.update(form_layout=FORM_V4, pledge_confirmed=confirmed)
+        return normalized
     if form.get("form_layout") == "original-eight-page-v1":
         return normalize_original_form(form, final=final)
     unknown = set(form) - set(FORM_FIELDS)
@@ -173,7 +194,7 @@ def _short_text(value: Any, field: str, maximum: int) -> str | None:
     return value.strip() or None
 
 
-def normalize_original_form(form: dict, *, final: bool) -> dict[str, Any]:
+def normalize_original_form(form: dict, *, final: bool, assigned_rate: float | None = None) -> dict[str, Any]:
     unknown = set(form) - set(ORIGINAL_FIELDS)
     if unknown:
         raise _invalid("form", "存在未允许的字段 " + ", ".join(sorted(unknown)))
@@ -192,8 +213,9 @@ def normalize_original_form(form: dict, *, final: bool) -> dict[str, Any]:
         "interest_rate_confirmed": form.get("interest_rate_confirmed", False),
     }
     rate = normalized["interest_rate"]
-    if rate is not None and (isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate not in (8.5, 10.5, 12.5)):
-        raise _invalid("interest_rate", "请选择页面提供的模拟年化利率")
+    allowed_rates = (assigned_rate,) if assigned_rate is not None else (8.5, 10.5, 12.5)
+    if rate is not None and (isinstance(rate, bool) or not isinstance(rate, (int, float)) or rate not in allowed_rates):
+        raise _invalid("interest_rate", "利率与本会话展示条款不一致，请刷新后核对")
     if not isinstance(normalized["interest_rate_confirmed"], bool):
         raise _invalid("interest_rate_confirmed", "必须是布尔值")
     income, debt = normalized["monthly_income"], normalized["total_debt"]
@@ -249,7 +271,7 @@ def compute_progress(
     normalized_form: dict[str, Any],
     scale_answers: dict[str, int | None] | None = None,
 ) -> int:
-    required = ORIGINAL_REQUIRED if normalized_form.get("form_layout") == "original-eight-page-v1" else REQUIRED_FORM_FIELDS
+    required = ORIGINAL_REQUIRED if normalized_form.get("form_layout") in {"original-eight-page-v1", FORM_V4} else REQUIRED_FORM_FIELDS
     completed_form = sum(
         1 for field in required if normalized_form.get(field) is not None
     )
@@ -284,7 +306,7 @@ def validate_consent_payload(payload: Any, expected_consent_version: str) -> dic
     _require_exact_keys(context, set(), {"device_type", "browser", "viewport_width", "viewport_height", "input_type_supported", "ui_version"})
     cleaned = {}
     if "ui_version" in context:
-        if not isinstance(context["ui_version"], str) or context["ui_version"] not in {"bank-application-v1"}:
+        if not isinstance(context["ui_version"], str) or context["ui_version"] not in {"bank-application-v1", UI_V4}:
             raise _invalid("ui_version", "界面版本无效")
         cleaned["ui_version"] = context["ui_version"]
     for key in ("viewport_width", "viewport_height"):
@@ -305,7 +327,7 @@ def validate_consent_payload(payload: Any, expected_consent_version: str) -> dic
     return {"is_test": is_test, "client_context": cleaned, "source": source}
 
 
-def validate_draft_payload(payload: Any) -> dict[str, Any]:
+def validate_draft_payload(payload: Any, *, terms: dict | None = None) -> dict[str, Any]:
     data = require_object(payload, "payload")
     _require_exact_keys(
         data, required={"client_seq", "form"}, optional={"scale_answers"}
@@ -313,7 +335,7 @@ def validate_draft_payload(payload: Any) -> dict[str, Any]:
     client_seq = _as_int(
         data["client_seq"], "client_seq", minimum=1, maximum=1_000_000_000
     )
-    normalized = normalize_form(data["form"], final=False)
+    normalized = normalize_form(data["form"], final=False, terms=terms)
     scale_answers = normalize_scale_answers(data.get("scale_answers"), final=False)
     return {
         "client_seq": client_seq,
@@ -323,7 +345,7 @@ def validate_draft_payload(payload: Any) -> dict[str, Any]:
     }
 
 
-def validate_final_payload(payload: Any) -> dict[str, Any]:
+def validate_final_payload(payload: Any, *, terms: dict | None = None) -> dict[str, Any]:
     data = require_object(payload, "payload")
     _require_exact_keys(
         data,
@@ -335,7 +357,7 @@ def validate_final_payload(payload: Any) -> dict[str, Any]:
         raise _invalid("submission_key", "格式无效")
     if data["final_confirmed"] is not True:
         raise ApiError(400, "final_confirmation_required", "请先完成最终确认")
-    normalized = normalize_form(data["form"], final=True)
+    normalized = normalize_form(data["form"], final=True, terms=terms)
     scale_answers = normalize_scale_answers(data["scale_answers"], final=True)
     return {
         "submission_key": key,
@@ -366,6 +388,8 @@ def _validate_event(event: Any, index: int) -> dict[str, Any]:
     event_type = event.get("type")
     if not isinstance(event_type, str) or event_type not in EVENT_TYPES:
         raise _invalid(f"events[{index}].type", "事件类型无效")
+    if (event_type.startswith("pledge_") and event.get("phase") != "pledge") or (event.get("phase") == "pledge" and not event_type.startswith("pledge_")):
+        raise _invalid("phase", "承诺操作必须使用独立阶段")
 
     cleaned: dict[str, Any] = {"type": event_type}
     if "phase" in event:

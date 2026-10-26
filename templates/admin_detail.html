@@ -100,7 +100,7 @@
       <h2>{{ "最终提交内容" if participant.submission else "最近草稿内容" }}</h2>
       {% if original_form %}
       <dl class="kv-list">
-      {% for key, label in [('nickname','称呼或昵称'),('age','年龄'),('education','学历'),('occupation','职业或身份'),('monthly_income','月可支配收入（元）'),('total_debt','当前总负债（元）'),('debt_ratio','总负债／月收入（%）'),('loan_amount','模拟贷款金额（元）'),('loan_term','模拟期限（月）'),('loan_purpose','模拟用途'),('interest_rate','模拟年化利率（%）'),('interest_rate_confirmed','已确认利率说明')] %}
+      {% for key, label in [('nickname','称呼或昵称'),('age','年龄'),('education','学历'),('occupation','职业或身份'),('monthly_income','月可支配收入（元）'),('total_debt','当前总负债（元）'),('debt_ratio','总负债／月收入（%）'),('loan_amount','模拟贷款金额（元）'),('loan_term','模拟期限（月）'),('loan_purpose','模拟用途'),('interest_rate','展示年利率（口径见rate_basis）'),('interest_rate_confirmed','已确认利率说明'),('scenario_version','条款情境版本'),('repayment_method','还款方式'),('pledge_version','承诺版本'),('pledge_confirmed','已确认本人承诺')] %}
         <dt>{{ label }}</dt><dd>{{ form_data.get(key) if form_data.get(key) is not none else '未作答' }}</dd>
       {% endfor %}
       </dl>

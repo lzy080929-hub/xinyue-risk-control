@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>模拟信贷申请｜信跃</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='original.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='bank-interface.css') }}" />
+  <script src="{{ url_for('static', filename='behavior_tracker.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='legacy_application_v3.js') }}" defer></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand" aria-label="信跃 XINYUE">
+      <span class="brand-mark" aria-hidden="true">信</span>
+      <div class="brand-name">信跃<span class="brand-en">XINYUE</span></div>
+      <span class="header-description">行为数据与信贷研究</span>
+    </div>
+    <a class="return-link" href="{{ url_for('platform.home') }}">← 返回平台首页</a>
+  </div>
+</header>
+<div class="page-shell">
+<p class="breadcrumb"><span>信跃研究平台</span><span aria-hidden="true">/</span><strong>模拟信贷申请</strong></p>
+<main>
+  <div class="application-heading">
+  <p class="eyebrow">信跃 · 研究参与入口</p>
+  <h1>模拟信贷申请</h1>
+  <p class="subtitle">请按步骤完成申请，填写行为仅用于科研分析，本项目不提供真实贷款。</p>
+  {% if test_mode %}<p class="test-note">测试模式 · 本次记录不计入正式样本</p>{% endif %}
+  </div>
+  <p class="info-note">正在继续更新前的申请草稿，本次利率与题项按原版本保留。<a id="start-new-application" href="{{ url_for('platform.apply', start_new=1, test=1 if test_mode else 0, source=request.args.get('source', '')) }}">另开新版申请（保留旧草稿）</a></p>
+  <div class="journey" id="journey">
+    <ol class="stage-list" aria-label="申请流程">
+      <li data-stage="1" class="is-current" aria-current="step"><span class="stage-number">1</span><span>参与说明</span></li>
+      <li data-stage="2"><span class="stage-number">2</span><span>申请填写</span></li>
+      <li data-stage="3"><span class="stage-number">3</span><span>信息确认</span></li>
+      <li data-stage="4"><span class="stage-number">4</span><span>看法问卷</span></li>
+    </ol>
+    <div class="progress-caption"><span id="step-name">阅读参与说明</span><p id="step-indicator">第 1 / 8 页</p></div>
+    <progress id="application-progress" value="1" max="8" aria-label="申请页码进度">1 / 8</progress>
+  </div>
+  <div id="session-info" hidden><span>参与编号：<strong id="participant-code"></strong></span><span id="save-state" role="status" aria-live="polite"></span></div>
+  <noscript><p class="no-script">本研究需要启用JavaScript以显示问卷并确认保存结果，请在启用后重新打开。</p></noscript>
+  <form id="loan-application-form" novalidate autocomplete="off"
+        data-consent-version="{{ consent_version }}" data-experiment-version="{{ experiment_version }}"
+        data-ui-version="{{ ui_version }}"
+        data-is-test="{{ 'true' if test_mode else 'false' }}">
+    <section class="form-page" data-page="1">
+      <p class="section-kicker">01 / 参与说明</p>
+      <h2>知情同意书</h2>
+      <div class="consent-highlights" aria-label="参与须知">
+        <div><strong>模拟流程</strong><span>无真实资金交易</span></div>
+        <div><strong>自主参与</strong><span>无需真实姓名</span></div>
+        <div><strong>研究用途</strong><span>数据限授权访问</span></div>
+      </div>
+      <div class="consent-copy">
+      <p>本次申请为自愿参与的模拟实验，不查询征信、不作真实放贷或个人信用评价。</p>
+      <p>同意后，我们会保存你填写的申请信息、29题量表答案，以及页面停留、字段聚焦、修改、粘贴次数和操作顺序等必要的行为数据。不会记录键入过程的正文、剪贴板内容或屏幕录像。</p>
+      <p>无需提供真实姓名或证件信息。收入、负债可按本人情况自愿估算，也可留空；贷款需求为模拟选择。数据仅供授权研究人员查看。中途退出时，已保存的草稿可能保留；如需撤回，可向项目负责人提供参与编号。</p>
+      </div>
+      <label class="check"><input id="consent_agreed" name="consent_agreed" type="checkbox" required />我已阅读上述说明，自愿参加并同意采集上述研究数据</label>
+    </section>
+    <section class="form-page" data-page="2" hidden>
+      <p class="section-kicker">02 / 申请填写</p>
+      <h2>申请人信息</h2>
+      <p class="section-help">请填写以下基本信息，标注“可选”的项目可留空。</p>
+      <div class="field"><label for="name">称呼或昵称（可选）</label><input id="name" name="nickname" type="text" maxlength="40" placeholder="无需填写真实姓名" /></div>
+      <div class="field"><label for="age">年龄</label><input id="age" name="age" type="number" min="18" max="80" step="1" required inputmode="numeric" /></div>
+      <div class="field"><label for="education">学历</label><select id="education" name="education" required><option value="">请选择</option><option value="high_school">高中及以下</option><option value="college">大专</option><option value="bachelor">本科</option><option value="master_plus">硕士及以上</option></select></div>
+      <div class="field"><label for="occupation">职业或身份</label><input id="occupation" name="occupation" maxlength="50" required placeholder="例如：大学生" /></div>
+    </section>
+    <section class="form-page" data-page="3" hidden>
+      <p class="section-kicker">03 / 申请填写</p>
+      <h2>收入与负债</h2>
+      <p class="help">以下两项自愿填写；可估算，留空表示未作答，0表示确实为零。学生收入可包括生活费、兼职等可支配来源。</p>
+      <div class="field"><label for="monthly_income">月可支配收入（元，可选）</label><input id="monthly_income" name="monthly_income" type="number" min="0" max="1000000" step="1" inputmode="numeric" /></div>
+      <div class="field"><label for="total_debt">当前总负债（元，可选）</label><input id="total_debt" name="total_debt" type="number" min="0" max="10000000" step="1" inputmode="numeric" /></div>
+      <div class="field"><label for="debt_ratio">总负债／月收入（%，自动计算）</label><input id="debt_ratio" name="debt_ratio" type="text" readonly placeholder="填写收入和负债后计算" /><p class="help">该比值可能超过100%；收入为0或未作答时不计算。</p></div>
+    </section>
+    <section class="form-page" data-page="4" hidden>
+      <p class="section-kicker">04 / 申请填写</p>
+      <h2>贷款需求</h2>
+      <p class="help">请设想一次合理的贷款需求，以下填写不会触发真实借贷。</p>
+      <div class="field"><label for="loan_amount">模拟贷款金额（元）</label><input id="loan_amount" name="loan_amount" type="number" min="100" max="100000" step="1" required inputmode="numeric" /></div>
+      <div class="field"><label for="loan_term">模拟贷款期限（月）</label><input id="loan_term" name="loan_term" type="number" min="1" max="60" step="1" required inputmode="numeric" /></div>
+      <div class="field"><label for="loan_purpose">模拟贷款用途</label><input id="loan_purpose" name="loan_purpose" type="text" maxlength="100" required placeholder="例如：培训、学习设备" /></div>
+    </section>
+    <section class="form-page" data-page="5" hidden>
+      <p class="section-kicker">05 / 申请填写</p>
+      <h2>利率确认</h2>
+      <div class="field"><label for="interest_rate">模拟年化利率（%）</label><select id="interest_rate" name="interest_rate" required><option value="">请选择</option><option value="8.5">8.5%</option><option value="10.5">10.5%</option><option value="12.5">12.5%</option></select></div>
+      <p class="info-note">此处仅用于模拟条件理解，不是贷款报价。实际借贷还应核对还款方式、费用与总成本。</p>
+      <label class="check"><input id="interest_rate_confirmed" name="interest_rate_confirmed" type="checkbox" required />我已阅读并理解上述模拟利率说明</label>
+    </section>
+    <section class="form-page" data-page="6" hidden>
+      <p class="section-kicker">06 / 信息确认</p>
+      <h2>最终确认</h2>
+      <dl id="application-review" class="review"></dl>
+      <p>你可以返回修改申请信息。接下来还有29道还款看法题，全部完成后才会正式提交。</p>
+      <label class="check"><input id="final_confirmed" name="final_confirmed" type="checkbox" required />我确认上述信息由我自愿填写，并了解这是模拟研究</label>
+    </section>
+    {% for page_number, heading, items in [(7, '还款态度量表（上）', survey_items[:15]), (8, '还款态度量表（下）', survey_items[15:])] %}
+    <section class="form-page" data-page="{{ page_number }}" hidden>
+      <p class="section-kicker">{{ '%02d'|format(page_number) }} / 看法问卷</p>
+      <h2>{{ heading }}</h2>
+      <p class="help">请按真实想法作答，没有标准答案。1 = 完全不同意，4 = 中立，7 = 完全同意。</p>
+      <details class="help"><summary>1—7 分分别表示</summary><div class="scale-labels">{% for value, label in likert_labels.items() %}<span><b>{{ value }}</b>{{ label }}</span>{% endfor %}</div></details>
+      <p class="help scale-progress" aria-live="polite">已作答 <span class="answered-count">0</span> / 29 题</p>
+      <div class="survey-scroll">
+      {% for qnum, text in items %}
+        <div class="scale-question" id="scale-q-{{ '%02d'|format(qnum) }}" data-question-number="{{ qnum }}">
+          <p>{{ qnum }}. {{ text }}</p>
+          <div class="likert-row" role="radiogroup" aria-label="第{{ qnum }}题">
+          {% for value, label in likert_labels.items() %}
+            <label class="likert-option" title="{{ label }}"><input type="radio" name="rs_q{{ '%02d'|format(qnum) }}" value="{{ value }}" required /><span>{{ value }}</span><span class="sr-only">{{ label }}</span></label>
+          {% endfor %}
+          </div>
+          <div class="scale-endpoints" aria-hidden="true"><span>完全不同意</span><span>完全同意</span></div>
+        </div>
+      {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <p id="form-error" class="error" role="alert" hidden></p>
+    <div class="buttons"><button id="prev-btn" type="button" disabled>上一页</button><button id="next-btn" type="button">下一页</button><button id="submit-btn" type="submit" hidden>提交申请</button></div>
+  </form>
+  <section id="submit-message" hidden tabindex="-1">
+    <div class="success-mark" aria-hidden="true">✓</div>
+    <h2>提交成功</h2><p>申请信息和29题答案已保存。感谢参与！</p>
+    <div class="receipt-box">
+    <p>参与编号：<strong id="receipt-participant"></strong></p><p>保存回执：<span id="receipt-id"></span></p>
+    <p id="behavior-receipt" class="help"></p>
+    </div>
+    <p class="help completion-note">金融知识提示：申请前应比较年化成本、核对每期还款额，并为必要生活支出预留资金。</p>
+    <p class="help">本研究不提供个人信用评分或贷款审批结果。</p>
+    <a class="return-link" href="{{ url_for('platform.home') }}">返回平台首页</a>
+  </section>
+  <p class="footer"><span>信跃 · 大学生创新训练项目</span><a href="{{ url_for('admin.login') }}">研究者入口 ↗</a></p>
+</main>
+<p class="page-footer">本平台仅用于科研模拟，不提供贷款审批或个人信用评价。</p>
+</div>
+</body>
+</html>

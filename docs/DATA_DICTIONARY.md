@@ -102,3 +102,6 @@ LRI是自报还款意向分量表，不是真实违约标签。四种构念不�
 分析导出默认正式且已提交，可主动选测试或草稿。单次最多10000条参与记录，超过需按日期/版本缩小范围。文本中的电子表格公式前缀会加单引号，保护导出后打开时的安全。
 
 事件明细仅导出application阶段的事件，无键入正文和问卷答案。量表原始题项及分数可用于Y或机制分析，不得在预测同一量表Y时无意作为输入特征。不同表单、设备和协议版本应分层核验。
+
+## 2026-10-27 固定条款与RRT
+新申请版本为 xinyue-fixedrate-v4 / bank-eight-page-v2 / bank-application-v2 / behavior-pledge-v3。terms_snapshot为服务器创建的固定6%名义年利率、等额本息及零额外费用情境。申请JSON追加scenario_version、rate_assignment_method、rate_basis、repayment_method、additional_fees、pledge_version与pledge_confirmed；历史记录保持空值。承诺事件为独立pledge阶段，只在分析CSV追加pledge_*计数，不混入普通字段粘贴。RRT为独立响应表，只保存混合choice、版本、测试标记和按日批次；不进入个人申请CSV。详细字段与问题口径见《固定条款_承诺_RRT说明.md》。

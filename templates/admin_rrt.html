@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RRT群体调查｜信跃后台</title><link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" /></head>
+<body class="admin-body"><main class="rrt-admin-shell"><section class="card">
+<a href="{{ url_for('admin.dashboard') }}">← 返回研究后台</a><h1>RRT群体调查</h1>
+<p><a href="?kind=formal">正式组</a> · <a href="?kind=test">测试组</a>　当前：{{ '测试' if kind == 'test' else '正式' }}组</p>
+<p>方案 {{ result.version }}；敏感题与独立公平随机题各50%。回答不与个人申请、量表或行为导出拼接。</p>
+<dl><dt>有效混合回答</dt><dd>{{ result.valid }}</dd><dt>混合“是” / “否”</dt><dd>{{ result.yes }} / {{ result.no }}</dd>
+<dt>同意后跳过</dt><dd>{{ result.skipped_after_consent }}（未进入调查的人不计在此处）</dd>
+{% if result.valid %}<dt>混合“是”比例</dt><dd>{{ '%.2f'|format(result.mixed_yes_rate * 100) }}%</dd>
+<dt>敏感经历比例的原始估计（2λ−0.5）</dt><dd>{{ '%.2f'|format(result.estimate_raw * 100) }}%</dd>
+<dt>95%区间（Wilson区间线性变换，保留原始边界）</dt><dd>{{ '%.2f'|format(result.ci95_raw[0] * 100) }}% ～ {{ '%.2f'|format(result.ci95_raw[1] * 100) }}%</dd>
+<dt>限制至0—100%的辅助点估计</dt><dd>{{ '%.2f'|format(result.estimate_constrained * 100) }}%（不能代替上面的原始估计）</dd>{% endif %}</dl>
+<p>小样本、跳过选择与不遵循随机规则均会影响结果。原始估计或区间可能超出0—100%，不得隐去这些结果。它估计调查对象中指定经历的比例，不是个人标签或借款人违约率。</p>
+<p>服务器只保存混合回答、版本、测试标记和按日批次。凭证兑付与回答分表保存；基础设施日志等仍可能提供关联线索，不能保证绝对不可关联。</p>
+</section></main></body></html>

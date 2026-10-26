@@ -48,12 +48,12 @@ def main():
                 context = browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
                 page = context.new_page()
                 page.on('pageerror', lambda error: page_errors.append(str(error)))
-                page.goto(base + '/?test=1&source=browser_check', wait_until='networkidle')
+                page.goto(base + '/apply/legacy?test=1&source=browser_check', wait_until='networkidle')
                 assert page.locator('.form-page').count() == 8
                 assert page.locator('#loan-application-form').get_attribute('data-ui-version') == 'bank-application-v1'
                 assert page.evaluate("getComputedStyle(document.querySelector('.buttons')).position") == 'relative'
                 desktop = browser.new_page(viewport={'width': 1440, 'height': 1100})
-                desktop.goto(base + '/?test=1', wait_until='networkidle')
+                desktop.goto(base + '/apply/legacy?test=1', wait_until='networkidle')
                 assert desktop.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 desktop.screenshot(path=str(out / '00-desktop-consent.png'), full_page=True)
                 desktop.close()
@@ -210,7 +210,7 @@ def main():
                 # Old in-progress tabs keep answers and obtain an explicit cross-interface quality flag.
                 legacy_tab = context.new_page()
                 legacy_tab.on('pageerror', lambda error: page_errors.append(str(error)))
-                legacy_tab.goto(base + '/?test=1')
+                legacy_tab.goto(base + '/apply/legacy?test=1')
                 legacy_tab.check('#consent_agreed')
                 legacy_tab.click('#next-btn')
                 expect(legacy_tab.locator('[data-page="2"]')).to_be_visible()

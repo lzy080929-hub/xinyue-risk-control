@@ -24,6 +24,7 @@ from models import (
 from security import authenticate_participant, new_write_token
 from survey import score_survey
 from behavior import summarize_events
+from protocols import CONSENT_V4, EXPERIMENT_V4, FORM_V4, BEHAVIOR_V4, assigned_terms
 from validation import (
     SCALE_FIELDS,
     validate_behavior_payload,
@@ -36,9 +37,9 @@ bp = Blueprint("participant_api", __name__, url_prefix="/api")
 
 
 def _require_current_protocol(participant: ParticipantSession) -> None:
-    """Do not mix data from an old study version into the current protocol."""
+    """Support frozen v3 and v4 without accepting earlier incompatible protocols."""
     if (
-        participant.experiment_version != current_app.config["EXPERIMENT_VERSION"]
+        participant.experiment_version not in {current_app.config["EXPERIMENT_VERSION"], EXPERIMENT_V4}
         or participant.scale_version != current_app.config["SCALE_VERSION"]
     ):
         raise ApiError(
@@ -46,6 +47,10 @@ def _require_current_protocol(participant: ParticipantSession) -> None:
             "protocol_version_mismatch",
             "该参与会话来自旧版研究流程，不能继续写入当前数据。请返回首页重新参与。",
         )
+
+
+    if participant.experiment_version == EXPERIMENT_V4 and not participant.terms_snapshot:
+        raise ApiError(409, "protocol_version_mismatch", "本会话的展示条款缺失，请联系项目负责人")
 
 
 def _score_submission_answers(
@@ -115,7 +120,7 @@ def _make_public_id(is_test: bool) -> str:
     return prefix + secrets.token_hex(6).upper()
 
 
-def _new_participant(is_test: bool) -> tuple[ParticipantSession, str]:
+def _new_participant(is_test: bool, *, v4: bool = False) -> tuple[ParticipantSession, str]:
     token, token_hash = new_write_token()
     now = datetime.now(timezone.utc)
     participant = ParticipantSession(
@@ -124,11 +129,12 @@ def _new_participant(is_test: bool) -> tuple[ParticipantSession, str]:
         is_test=is_test,
         status="in_progress",
         progress=0,
-        consent_version=current_app.config["CONSENT_VERSION"],
+        consent_version=CONSENT_V4 if v4 else current_app.config["CONSENT_VERSION"],
         consented_at=now,
-        experiment_version=current_app.config["EXPERIMENT_VERSION"],
+        experiment_version=EXPERIMENT_V4 if v4 else current_app.config["EXPERIMENT_VERSION"],
         scale_version=current_app.config["SCALE_VERSION"],
-        behavior_metrics_version=current_app.config["BEHAVIOR_METRICS_VERSION"],
+        behavior_metrics_version=BEHAVIOR_V4 if v4 else current_app.config["BEHAVIOR_METRICS_VERSION"],
+        terms_snapshot=assigned_terms() if v4 else None,
         created_at=now,
         updated_at=now,
         last_seen_at=now,
@@ -139,8 +145,9 @@ def _new_participant(is_test: bool) -> tuple[ParticipantSession, str]:
 @bp.post("/sessions")
 def create_session():
     payload = _json_payload()
+    v4 = payload.get("consent_version") == CONSENT_V4
     consent = validate_consent_payload(
-        payload, current_app.config["CONSENT_VERSION"]
+        payload, CONSENT_V4 if v4 else current_app.config["CONSENT_VERSION"]
     )
     is_test = consent["is_test"]
     if is_test and not current_app.config.get("ALLOW_TEST_MODE", False):
@@ -149,7 +156,7 @@ def create_session():
     # A unique public code can collide in theory. Retry with a new code rather
     # than exposing an IntegrityError to the participant.
     for attempt in range(5):
-        participant, token = _new_participant(is_test)
+        participant, token = _new_participant(is_test, v4=v4)
         participant.client_context = consent["client_context"]
         participant.source = consent["source"]
         db.session.add(participant)
@@ -174,6 +181,7 @@ def create_session():
                     "status": participant.status,
                     "is_test": participant.is_test,
                     "consent_version": participant.consent_version,
+                    "terms": participant.terms_snapshot,
                     "versions": {
                         "experiment": participant.experiment_version,
                         "scale": participant.scale_version,
@@ -207,7 +215,7 @@ def save_draft(public_id: str):
         raise ApiError(409, "already_submitted", "该会话已经提交，不能再修改草稿")
     _require_current_protocol(participant)
 
-    draft_data = validate_draft_payload(_json_payload())
+    draft_data = validate_draft_payload(_json_payload(), terms=participant.terms_snapshot if participant.experiment_version == EXPERIMENT_V4 else None)
     draft = participant.draft
     if draft is not None:
         if draft_data["client_seq"] < draft.client_seq:
@@ -407,7 +415,8 @@ def submit(public_id: str):
         )
     _require_current_protocol(participant)
 
-    final_data = validate_final_payload(_json_payload())
+    final_data = validate_final_payload(_json_payload(), terms=participant.terms_snapshot if participant.experiment_version == EXPERIMENT_V4 else None)
+    form_version = FORM_V4 if participant.experiment_version == EXPERIMENT_V4 else current_app.config["FORM_VERSION"]
     scale_snapshot, scored_items = _score_submission_answers(
         final_data["scale_answers"]
     )
@@ -417,7 +426,7 @@ def submit(public_id: str):
             "form": final_data["form"],
             "scale_answers": final_data["scale_answers"],
             "final_confirmed": True,
-            "form_version": current_app.config["FORM_VERSION"],
+            "form_version": form_version,
             "scale_version": scale_snapshot["scale_version"],
             "scoring_version": scale_snapshot["scoring_version"],
         },
@@ -431,7 +440,7 @@ def submit(public_id: str):
         receipt_id=str(uuid.uuid4()),
         payload=final_data["form"],
         content_hash=hashlib.sha256(canonical).hexdigest(),
-        form_version=current_app.config["FORM_VERSION"],
+        form_version=form_version,
         scale_version=scale_snapshot["scale_version"],
         scoring_version=scale_snapshot["scoring_version"],
         scale_scores=scale_snapshot,

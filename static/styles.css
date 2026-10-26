@@ -1480,3 +1480,5 @@ details summary {
 }
 /* Research filters share the existing admin typography and spacing. */
 .record-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px}.record-filters label{display:flex;flex-direction:column;gap:5px;font-size:14px}.record-filters input,.record-filters select{font:inherit;border:1px solid #cbd5e1;border-radius:7px;padding:8px;max-width:220px;min-height:40px}.record-filters button{min-height:40px}
+
+.rrt-admin-shell{max-width:1000px;margin:24px auto;padding:0 16px}.rrt-admin-shell .card{padding:24px}.rrt-admin-shell dl{display:grid;grid-template-columns:minmax(180px,1fr) 1.4fr;gap:12px 24px;margin:24px 0}.rrt-admin-shell dt{color:#536981}.rrt-admin-shell dd{margin:0;font-weight:600;overflow-wrap:anywhere}.rrt-admin-shell p{line-height:1.9}.rrt-admin-shell a{color:#176c78}@media(max-width:600px){.rrt-admin-shell dl{grid-template-columns:1fr;gap:7px}.rrt-admin-shell dd{margin-bottom:14px}.rrt-admin-shell .card{padding:18px}}

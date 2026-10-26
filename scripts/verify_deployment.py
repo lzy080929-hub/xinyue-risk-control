@@ -86,7 +86,7 @@ def main():
         "check": "eight_page_bank_interface",
         "passed": application_status == 200
         and application_html.count('class="form-page" data-page=') == 8
-        and 'data-ui-version="bank-application-v1"' in application_html,
+        and any('data-ui-version="' + version + '"' in application_html for version in ("bank-application-v1", "bank-application-v2")),
         "http_status": application_status,
         "path": application_path,
     })

@@ -20,6 +20,13 @@ def test_packaged_release_can_migrate_without_source_files(tmp_path):
         assert not any(Path(name).suffix in {'.db', '.sqlite3'} for name in names)
         for expected in (
             'platform_routes.py',
+            'protocols.py',
+            'rrt_routes.py',
+            'static/rrt.js',
+            'static/legacy_application_v3.js',
+            'templates/legacy_application_v3.html',
+            'templates/admin_rrt.html',
+            'scripts/verify_fixedrate.py',
             'platform_content.py',
             'static/platform.css',
             'static/platform.js',
@@ -43,4 +50,4 @@ def test_packaged_release_can_migrate_without_source_files(tmp_path):
         cwd=checkout, env=environment, capture_output=True, text=True, encoding='utf-8', timeout=45)
     assert result.returncode == 0, result.stdout + result.stderr
     with sqlite3.connect(database) as connection:
-        assert connection.execute('SELECT version_num FROM alembic_version').fetchone()[0] == 'a83c6f2d901e'
+        assert connection.execute('SELECT version_num FROM alembic_version').fetchone()[0] == 'b6d208a134f0'

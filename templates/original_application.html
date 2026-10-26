@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='bank-interface.css') }}" />
   <script src="{{ url_for('static', filename='behavior_tracker.js') }}" defer></script>
   <script src="{{ url_for('static', filename='original_application.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='rrt.js') }}" defer></script>
 </head>
 <body>
 <header class="site-header">
@@ -17,7 +18,7 @@
       <div class="brand-name">信跃<span class="brand-en">XINYUE</span></div>
       <span class="header-description">行为数据与信贷研究</span>
     </div>
-    <span class="research-tag">科研模拟 · 非真实贷款</span>
+    <a class="home-button" href="{{ url_for('platform.home') }}">← 返回平台首页</a>
   </div>
 </header>
 <div class="page-shell">
@@ -26,7 +27,7 @@
   <div class="application-heading">
   <p class="eyebrow">信跃 · 研究参与入口</p>
   <h1>模拟信贷申请</h1>
-  <p class="subtitle">请按步骤完成申请，填写行为仅用于科研分析，本项目不提供真实贷款。</p>
+  <p class="subtitle">按步骤填写需求、核对条款并完成问卷。</p>
   {% if test_mode %}<p class="test-note">测试模式 · 本次记录不计入正式样本</p>{% endif %}
   </div>
   <div class="journey" id="journey">
@@ -44,6 +45,7 @@
   <form id="loan-application-form" novalidate autocomplete="off"
         data-consent-version="{{ consent_version }}" data-experiment-version="{{ experiment_version }}"
         data-ui-version="{{ ui_version }}"
+        data-form-version="{{ form_version }}" data-pledge-version="{{ pledge_version }}"
         data-is-test="{{ 'true' if test_mode else 'false' }}">
     <section class="form-page" data-page="1">
       <p class="section-kicker">01 / 参与说明</p>
@@ -56,6 +58,7 @@
       <div class="consent-copy">
       <p>本次申请为自愿参与的模拟实验，不查询征信、不作真实放贷或个人信用评价。</p>
       <p>同意后，我们会保存你填写的申请信息、29题量表答案，以及页面停留、字段聚焦、修改、粘贴次数和操作顺序等必要的行为数据。不会记录键入过程的正文、剪贴板内容或屏幕录像。</p>
+      <p>本情境的名义年利率统一为6.00%，按月等额本息、无其他费用；它不是银行对你的实际报价。申请中有自主填写承诺步骤，仅记录完成状态与操作次数，不上传承诺框正文。问卷保存后另有可自愿参加的独立随机应答调查，不影响申请回执。</p>
       <p>无需提供真实姓名或证件信息。收入、负债可按本人情况自愿估算，也可留空；贷款需求为模拟选择。数据仅供授权研究人员查看。中途退出时，已保存的草稿可能保留；如需撤回，可向项目负责人提供参与编号。</p>
       </div>
       <label class="check"><input id="consent_agreed" name="consent_agreed" type="checkbox" required />我已阅读上述说明，自愿参加并同意采集上述研究数据</label>
@@ -87,16 +90,33 @@
     </section>
     <section class="form-page" data-page="5" hidden>
       <p class="section-kicker">05 / 申请填写</p>
-      <h2>利率确认</h2>
-      <div class="field"><label for="interest_rate">模拟年化利率（%）</label><select id="interest_rate" name="interest_rate" required><option value="">请选择</option><option value="8.5">8.5%</option><option value="10.5">10.5%</option><option value="12.5">12.5%</option></select></div>
-      <p class="info-note">此处仅用于模拟条件理解，不是贷款报价。实际借贷还应核对还款方式、费用与总成本。</p>
-      <label class="check"><input id="interest_rate_confirmed" name="interest_rate_confirmed" type="checkbox" required />我已阅读并理解上述模拟利率说明</label>
+      <h2>借款条款确认</h2>
+      <p class="section-help">请核对平台展示的条件，再决定是否继续。</p>
+      <div class="quote-card">
+        <div class="field"><label for="interest_rate">本情境名义年利率（%）</label><input id="interest_rate" name="interest_rate" type="text" value="{{ '%.2f'|format(terms.interest_rate) }}" readonly aria-describedby="quote-note" /></div>
+        <dl class="quote-grid"><div><dt>还款方式</dt><dd>按月等额本息</dd></div><div><dt>其他费用</dt><dd>0 元</dd></div>
+        <div><dt>预计每月还款</dt><dd id="quote-monthly">—</dd></div><div><dt>预计总还款</dt><dd id="quote-total">—</dd></div>
+        <div><dt>预计总利息</dt><dd id="quote-interest">—</dd></div><div><dt>有效年化率（按月复利）</dt><dd id="quote-effective">—</dd></div></dl>
+      </div>
+      <p class="info-note" id="quote-note">本情境统一展示6.00%的名义年利率，不按收入、负债或操作行为给你定价。月利率按年利率÷12计算，未计其他费用，末期可能因分币取整调整。真实银行的具体利率与费用以其审批结果、展示条款和合同为准。</p>
+      <label class="check"><input id="interest_rate_confirmed" name="interest_rate_confirmed" type="checkbox" required />我已阅读上述利率、还款方式和预计成本</label>
     </section>
     <section class="form-page" data-page="6" hidden>
       <p class="section-kicker">06 / 信息确认</p>
       <h2>最终确认</h2>
       <dl id="application-review" class="review"></dl>
       <p>你可以返回修改申请信息。接下来还有29道还款看法题，全部完成后才会正式提交。</p>
+      <fieldset class="pledge-card" data-track-exclude>
+        <legend>本人承诺</legend>
+        <p id="pledge-source">{{ pledge_text }}</p>
+        <button type="button" id="copy-pledge">复制承诺文字</button>
+        <p class="help">将上面的文字粘贴到下方；也可长按选择复制或手动输入。无需填写真实姓名。</p>
+        <label for="pledge-text">粘贴或输入承诺文字</label>
+        <textarea id="pledge-text" rows="3" maxlength="160" required aria-describedby="pledge-status"></textarea>
+        <p id="pledge-status" class="help" role="status">请完成承诺文字后勾选确认。</p>
+        <label class="check"><input id="pledge_confirmed" name="pledge_confirmed" type="checkbox" required />本人已阅读上述说明，并自主确认本次填写</label>
+        <p class="help">仅保存完成状态与操作次数；本框正文不会上传，页面要求的粘贴不计入普通字段粘贴指标。</p>
+      </fieldset>
       <label class="check"><input id="final_confirmed" name="final_confirmed" type="checkbox" required />我确认上述信息由我自愿填写，并了解这是模拟研究</label>
     </section>
     {% for page_number, heading, items in [(7, '还款态度量表（上）', survey_items[:15]), (8, '还款态度量表（下）', survey_items[15:])] %}
@@ -133,7 +153,26 @@
     </div>
     <p class="help completion-note">金融知识提示：申请前应比较年化成本、核对每期还款额，并为必要生活支出预留资金。</p>
     <p class="help">本研究不提供个人信用评分或贷款审批结果。</p>
-    <a class="return-link" href="{{ '/?test=1' if test_mode else '/' }}">返回首页</a>
+    <section id="rrt-panel" class="rrt-card" data-version="{{ rrt_version }}">
+      <h3>自愿参加：独立随机应答调查</h3>
+      <p>申请与29题答案已经保存。下面的调查可不参加，不影响上面的回执。</p>
+      <div id="rrt-intro">
+        <p>点击开始后，浏览器私下随机分配一道题：50%回答个人经历，50%回答一个独立公平随机结果是否为正面。只按屏幕当次显示的问题回答“是”或“否”，不用告诉我们抽到了哪一题。</p>
+        <p>个人经历题口径：{{ rrt_question }}个人信用借款包括信用卡、消费信贷等。本调查中，信用卡按账单标明的最低还款额判断，分期借款按约定当期应还金额判断。没有到期借款经历按“否”回答；不包括尚未到期或在事先约定宽限期内按时支付的情况。</p>
+        <p class="help">服务器仅保存混合回答、版本、测试标记与按日批次；不接收随机分支、随机结果或作答过程。回答与申请分表保存，不用于给个人贴标签；凭证及网络日志仍可能提供关联线索，不能保证绝对不可关联。混合回答保存后无法按参与编号单独找回或撤回，你可在提交前跳过。刷新后私下随机结果不会恢复。</p>
+        <label class="check"><input id="rrt-consent" type="checkbox" />我已理解随机规则，自愿参加这项独立调查</label>
+        <button type="button" id="rrt-start">开始私下随机</button>
+        <button type="button" id="rrt-decline">暂不参加</button>
+      </div>
+      <div id="rrt-question-area" hidden>
+        <p id="rrt-private-question" data-sensitive-question="{{ rrt_question }}"></p>
+        <p class="help">只回答屏幕显示的这一题；无需解释，勿截图或分享私下随机结果。</p>
+        <fieldset><legend>我的回答</legend><label class="check"><input type="radio" name="rrt-choice" value="yes" />是</label><label class="check"><input type="radio" name="rrt-choice" value="no" />否</label></fieldset>
+        <button type="button" id="rrt-send">提交独立调查</button><button type="button" id="rrt-skip">跳过这题</button>
+      </div>
+      <p id="rrt-status" class="help" role="status" aria-live="polite"></p>
+    </section>
+    <a class="return-link" href="{{ url_for('platform.home') }}">返回平台首页</a>
   </section>
   <p class="footer"><span>信跃 · 大学生创新训练项目</span><a href="{{ url_for('admin.login') }}">研究者入口 ↗</a></p>
 </main>

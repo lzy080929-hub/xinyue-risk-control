@@ -15,11 +15,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import admin_routes
 import participant_routes
 import platform_routes
+import rrt_routes
 from config import build_runtime_config
 from errors import ApiError
 from extensions import db, migrate
 from security import LoginRateLimiter, api_error_response
-from models import ParticipantSession
+from models import ParticipantSession, RrtInvitation, RrtResponse
 
 
 @event.listens_for(Engine, "connect")
@@ -59,6 +60,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     app.register_blueprint(participant_routes.bp)
     app.register_blueprint(platform_routes.bp)
+    app.register_blueprint(rrt_routes.bp)
     app.register_blueprint(admin_routes.bp)
 
     @app.get("/favicon.ico")
@@ -69,7 +71,9 @@ def create_app(test_config: dict | None = None) -> Flask:
     def health():
         try:
             db.session.execute(text("SELECT 1"))
-            db.session.execute(select(ParticipantSession.id, ParticipantSession.client_context).limit(1))
+            db.session.execute(select(ParticipantSession.id, ParticipantSession.client_context, ParticipantSession.terms_snapshot).limit(1))
+            db.session.execute(select(RrtInvitation.id, RrtInvitation.redeemed).limit(1))
+            db.session.execute(select(RrtResponse.id, RrtResponse.choice).limit(1))
         except SQLAlchemyError:
             app.logger.error("Database readiness check failed")
             return jsonify({"status": "degraded", "database": "unavailable"}), 503

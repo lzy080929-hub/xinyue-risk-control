@@ -14,7 +14,7 @@
       this.hiddenStarted = document.hidden ? performance.now() : null;
       this.frozen = false;
       this.uploadPromise = null;
-      this.order = Array.from(new Set(Array.from(options.form.querySelectorAll("[name]")).map(el => el.name))).filter(name => name !== "consent_agreed");
+      this.order = Array.from(new Set(Array.from(options.form.querySelectorAll("[name]")).filter(el => !el.closest("[data-track-exclude]")).map(el => el.name))).filter(name => name !== "consent_agreed");
       this.cleanup = [];
       this.listen(options.form, "focusin", event => this.focus(event.target));
       this.listen(options.form, "focusout", event => { if (event.target.name === this.focused) this.closeFocus(); });
@@ -34,7 +34,7 @@
     listen(target, type, callback) { target.addEventListener(type, callback); this.cleanup.push(() => target.removeEventListener(type, callback)); }
     time() { return Math.round(this.baseElapsed + performance.now() - this.startedAt); }
     phase() { return this.page >= 7 ? "survey" : "application"; }
-    eligible(target) { return !this.frozen && !document.hidden && target?.name && this.order.includes(target.name) && !target.readOnly; }
+    eligible(target) { return !this.frozen && !document.hidden && target?.name && this.order.includes(target.name) && !target.readOnly && !target.closest("[data-track-exclude]"); }
     record(type, extra = {}) {
       if (this.frozen) return;
       const queued = this.state.buffer.length + this.state.pending.reduce((sum, batch) => sum + batch.events.length, 0);

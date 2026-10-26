@@ -40,6 +40,7 @@ class ParticipantSession(db.Model):
     behavior_metrics_version = db.Column(db.String(32), nullable=False)
     client_context = db.Column(db.JSON, nullable=True)
     source = db.Column(db.String(64), nullable=True, index=True)
+    terms_snapshot = db.Column(db.JSON, nullable=True)
 
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=utc_now)
     updated_at = db.Column(
@@ -106,6 +107,27 @@ class ParticipantSession(db.Model):
             "already_submitted": already_submitted,
             "behavior_status": self.behavior_summary.status if self.behavior_summary else "not_started",
         }
+
+
+class RrtInvitation(db.Model):
+    """Eligibility/redemption only; contains no answer or response identifier."""
+    __tablename__ = "rrt_invitations"
+    id = db.Column(db.Integer, primary_key=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey("participant_sessions.id"), unique=True, nullable=False)
+    token_hash = db.Column(db.String(64), unique=True, nullable=False)
+    protocol_version = db.Column(db.String(32), nullable=False)
+    redeemed = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class RrtResponse(db.Model):
+    """Mixed response only: no participant, voucher, random branch or exact time."""
+    __tablename__ = "rrt_responses"
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    protocol_version = db.Column(db.String(32), nullable=False, index=True)
+    is_test = db.Column(db.Boolean, nullable=False, index=True)
+    batch_day = db.Column(db.Date, nullable=False)
+    choice = db.Column(db.String(8), nullable=False)
+    __table_args__ = (db.CheckConstraint("choice IN ('yes', 'no', 'skipped')", name="ck_rrt_choice"),)
 
 
 class FormDraft(db.Model):
