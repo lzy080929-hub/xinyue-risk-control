@@ -12,11 +12,12 @@ ROOT_FILES = ["app.py", "admin_routes.py", "participant_routes.py", "behavior.py
 ASSETS = ["original.css", "bank-interface.css", "original_application.js", "behavior_tracker.js", "admin_dashboard.js", "styles.css", "favicon.svg"]
 
 
-def main():
+def build_release(output_directory: Path | None = None) -> Path:
     files = [ROOT / name for name in ROOT_FILES]
     files += [ROOT / "static" / name for name in ASSETS]
     files += list((ROOT / "templates").glob("*.html"))
     files += [p for p in (ROOT / "migrations").rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".mako"}]
+    files += [ROOT / "migrations" / "alembic.ini"]
     files += [ROOT / "scripts" / name for name in ["start_production.py", "backup_local.py", "hash_admin_password.py", "package_release.py", "verify_browser.py", "verify_deployment.py", "open_local.ps1"]]
     files += [ROOT / "docs" / "screenshots" / name for name in ["desktop-consent.png", "mobile-consent.png", "mobile-finance.png", "mobile-survey.png", "mobile-receipt.png"]]
     files += list((ROOT / "docs").glob("*.md"))
@@ -24,14 +25,18 @@ def main():
     missing = [str(p.relative_to(ROOT)) for p in files if not p.is_file()]
     if missing:
         raise RuntimeError("Release incomplete: " + ", ".join(missing))
-    folder = ROOT / "dist"
-    folder.mkdir(exist_ok=True)
+    folder = output_directory or ROOT / "dist"
+    folder.mkdir(parents=True, exist_ok=True)
     output = folder / ("xinyue-render-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ") + ".zip")
     with zipfile.ZipFile(output, "x", zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(set(files)):
             archive.write(path, path.relative_to(ROOT).as_posix())
         archive.writestr("release_manifest.json", json.dumps({"format": 1, "files": sorted(p.relative_to(ROOT).as_posix() for p in set(files)), "runtime_data_included": False}, ensure_ascii=False, indent=2))
-    print(output)
+    return output
+
+
+def main():
+    print(build_release())
 
 
 if __name__ == "__main__":
