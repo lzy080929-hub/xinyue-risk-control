@@ -1,0 +1,128 @@
+{% extends "platform_base.html" %}
+{% block title %}金融素养学习测评｜信跃{% endblock %}
+{% block body_class %}assessment-body{% endblock %}
+{% block content %}
+<div class="page-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>金融素养测评</span>
+  </nav>
+
+  <header class="page-hero page-hero-compact">
+    <p class="eyebrow">16 题 · 约 5—8 分钟</p>
+    <h1>金融素养学习测评</h1>
+    <p class="page-lead">
+      四个知识主题，每个主题 4 道可客观判分的学习题。每题都可以选择“暂不确定”，提交后统一查看解释、正确率和建议复习的主题。
+    </p>
+    <div class="notice notice-info">
+      <strong>这是一份平台自编学习测验。</strong>
+      它参考金融素养中“知识、行为与态度”的常见测量思路，但没有复制官方题库，也不声称等同 OECD 标准分、经过信效度认证的测验或个人信用评价。
+    </div>
+    <dl class="stat-row">
+      <div><dt>题目</dt><dd>{{ question_count }} 题</dd></div>
+      <div><dt>主题</dt><dd>{{ topics|length }} 个</dd></div>
+      <div><dt>答题记录</dt><dd>仅存本浏览器</dd></div>
+      <div><dt>版本</dt><dd><code>{{ learning_assessment_version }}</code></dd></div>
+    </dl>
+  </header>
+
+  <noscript>
+    <div class="notice notice-warning">本页的计分和本地保存需要启用 JavaScript；未启用时不会提交任何答案。</div>
+  </noscript>
+
+  <section id="assessment-result" class="result-panel" tabindex="-1" hidden aria-labelledby="result-title">
+    <div class="result-header">
+      <div>
+        <p class="eyebrow">本次学习测验结果</p>
+        <h2 id="result-title"><span id="result-score">0</span> / {{ question_count }} 题答对</h2>
+        <p id="result-summary" class="result-summary"></p>
+      </div>
+      <div class="result-rate" aria-label="正确率">
+        <strong id="result-rate">0%</strong>
+        <span>正确率</span>
+      </div>
+    </div>
+    <div class="result-meta">
+      <p id="result-completion"></p>
+      <p id="result-storage-note" class="muted"></p>
+    </div>
+    <div id="result-topics" class="result-topic-grid"></div>
+    <div class="result-recommend">
+      <h3>建议先复习</h3>
+      <div id="result-recommendations"></div>
+    </div>
+    <div class="result-actions">
+      <button id="retry-assessment" class="button button-secondary" type="button">重新作答</button>
+      <a class="button button-quiet" href="{{ url_for('platform.my_learning') }}">到“我的学习”查看记录</a>
+    </div>
+  </section>
+
+  <div class="assessment-toolbar">
+    <div>
+      <strong>作答进度</strong>
+      <span id="assessment-count" aria-live="polite">已选择 0 / {{ question_count }} 题</span>
+    </div>
+    <progress id="assessment-progress" value="0" max="{{ question_count }}">{{ question_count }} 题</progress>
+  </div>
+
+  <div id="assessment-form" class="assessment-form" data-total="{{ question_count }}">
+    {% for topic in topics %}
+    <section class="assessment-section" aria-labelledby="topic-{{ topic.slug }}">
+      <div class="topic-heading">
+        <div>
+          <p class="eyebrow">主题 {{ loop.index }} · {{ topic_counts[topic.slug] }} 题</p>
+          <h2 id="topic-{{ topic.slug }}">{{ topic.name }}</h2>
+        </div>
+        <p>{{ topic.description }}</p>
+      </div>
+
+      {% for question in questions if question.topic == topic.slug %}
+      <fieldset class="quiz-question" data-question="{{ question.number }}" data-topic="{{ topic.slug }}" data-topic-name="{{ topic.name }}" data-correct="{{ question.correct_index }}" data-learn-slug="{{ question.learn_slug }}">
+        <legend>
+          <span class="question-number">{{ "%02d"|format(question.number) }}</span>
+          <span>{{ question.prompt }}</span>
+        </legend>
+        <div class="quiz-options">
+          {% for option in question.options %}
+          <label class="quiz-option">
+            <input type="radio" name="q{{ question.number }}" value="{{ loop.index0 }}" />
+            <span class="option-key" aria-hidden="true">{{ "ABCD"[loop.index0] }}</span>
+            <span class="option-text">{{ option }}</span>
+          </label>
+          {% endfor %}
+          <label class="quiz-option quiz-option-unsure">
+            <input type="radio" name="q{{ question.number }}" value="unsure" />
+            <span class="option-key" aria-hidden="true">?</span>
+            <span class="option-text">暂不确定</span>
+          </label>
+        </div>
+        <div class="answer-review" hidden>
+          <p class="review-verdict"></p>
+          <p><strong>正确答案：</strong>{{ "ABCD"[question.correct_index] }}. {{ question.options[question.correct_index] }}</p>
+          <p>{{ question.explanation }}</p>
+          <a class="text-link" href="{{ url_for('platform.learn_topic', slug=question.learn_slug) }}">继续阅读这个主题 <span aria-hidden="true">→</span></a>
+        </div>
+      </fieldset>
+      {% endfor %}
+    </section>
+    {% endfor %}
+
+    <div class="assessment-submit">
+      <div>
+        <h2>完成并查看解释</h2>
+        <p>可以保留未作答的题目；未作答不会算作答对。结果同时报告完成度和正确率。</p>
+      </div>
+      <button id="assessment-submit-button" class="button button-primary button-large" type="button">查看本次结果</button>
+    </div>
+  </div>
+
+  <p class="privacy-note">
+    本页答案只用于当前浏览器内的学习反馈，不会发送到服务器，也不会写入研究数据库。学习进度可以在
+    <a href="{{ url_for('platform.my_learning') }}">我的学习</a> 中清除。
+  </p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='assessment.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "platform_base.html" %}
+{% block title %}我的学习｜信跃{% endblock %}
+{% block body_class %}my-learning-body{% endblock %}
+{% block content %}
+<div class="page-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>我的学习</span>
+  </nav>
+
+  <header class="page-hero page-hero-compact">
+    <p class="eyebrow">当前浏览器 · 不需要账号</p>
+    <h1>我的学习</h1>
+    <p class="page-lead">
+      这里汇总最近一次学习测评、已读主题和用过的工具。记录只保存在当前浏览器，不会上传到服务器。
+    </p>
+    <p class="version-line">
+      学习版本 <code>{{ platform_version }}</code> · 测评版本 <code>{{ learning_assessment_version }}</code>
+    </p>
+  </header>
+
+  <noscript>
+    <div class="notice notice-warning">学习记录由浏览器本地脚本读取；启用 JavaScript 后才能显示。</div>
+  </noscript>
+
+  <div class="learning-layout">
+    <section class="learning-panel assessment-record-panel" aria-labelledby="my-assessment-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">学习测评</p>
+          <h2 id="my-assessment-title">最近一次结果</h2>
+        </div>
+        <a class="button button-secondary" href="{{ url_for('platform.assessment') }}">再测一次</a>
+      </div>
+      <div id="assessment-record-empty" class="empty-state">
+        <p>这个浏览器还没有完成过学习测评。</p>
+        <p><a class="text-link" href="{{ url_for('platform.assessment') }}">开始 16 题测评 <span aria-hidden="true">→</span></a></p>
+      </div>
+      <div id="assessment-record" hidden>
+        <div class="assessment-record-top">
+          <div>
+            <p class="record-label">本次正确率</p>
+            <strong class="record-score"><span id="my-assessment-rate">—</span><small>%</small></strong>
+          </div>
+          <div class="record-meta">
+            <p>答对 <strong id="my-assessment-score">—</strong> / <span id="my-assessment-total">16</span> 题</p>
+            <p>完成 <strong id="my-assessment-answered">—</strong> 题</p>
+            <p id="my-assessment-date"></p>
+          </div>
+        </div>
+        <div id="my-assessment-topics" class="record-topic-list"></div>
+        <p id="my-assessment-recommendation" class="record-note"></p>
+      </div>
+    </section>
+
+    <section class="learning-panel" aria-labelledby="my-reading-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">知识科普</p>
+          <h2 id="my-reading-title">阅读进度</h2>
+        </div>
+        <p class="panel-count"><strong data-learning-read-count>0</strong> / {{ topics|length }} 篇已读</p>
+      </div>
+      <progress data-learning-read-progress max="{{ topics|length }}" value="0" aria-label="已读主题进度">{{ topics|length }} 个主题</progress>
+      <ul class="my-topic-list">
+        {% for topic in topics %}
+        <li data-learning-topic="{{ topic.slug }}">
+          <a href="{{ url_for('platform.learn_topic', slug=topic.slug) }}">
+            <span class="my-topic-number">{{ topic.number }}</span>
+            <span class="my-topic-title">{{ topic.title }}</span>
+            <span class="my-topic-category">{{ topic.category }}</span>
+            <span class="read-badge" hidden>已读</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="learning-panel" aria-labelledby="my-tools-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">学习工具</p>
+          <h2 id="my-tools-title">用过的工具</h2>
+        </div>
+        <a class="text-link" href="{{ url_for('platform.tools') }}">打开学习工具 <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="my-tool-list">
+        <li data-tool-record="loan"><span>借贷成本试算</span><strong data-tool-status>未使用</strong></li>
+        <li data-tool-record="budget"><span>生活费预算</span><strong data-tool-status>未使用</strong></li>
+        <li data-tool-record="anti-fraud"><span>反诈情境判断</span><strong data-tool-status>未使用</strong></li>
+      </ul>
+    </section>
+
+    <section class="learning-panel local-data-panel" aria-labelledby="local-data-title">
+      <div>
+        <p class="eyebrow">本地数据</p>
+        <h2 id="local-data-title">清除这个浏览器的学习记录</h2>
+        <p>
+          只会删除测评摘要、阅读标记和工具使用状态，不会影响你另开的信贷申请标签页，也不会删除已经提交到服务器的研究记录。
+        </p>
+      </div>
+      <div class="local-data-actions">
+        <button id="clear-learning-data" class="button button-quiet" type="button">清除学习记录</button>
+        <p id="clear-learning-status" class="muted" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="notice notice-info">
+    “我的学习”不建立账号，也不做跨设备同步。换手机、使用无痕窗口或清理浏览器数据后，记录可能消失；这是本地存储的正常边界。
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='my_learning.js') }}" defer></script>
+{% endblock %}

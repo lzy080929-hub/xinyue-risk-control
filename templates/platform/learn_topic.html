@@ -1,0 +1,83 @@
+{% extends "platform_base.html" %}
+{% block title %}{{ topic.title }}｜信跃知识科普{% endblock %}
+{% block body_class %}article-body{% endblock %}
+{% block content %}
+<div class="article-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <a href="{{ url_for('platform.learn') }}">知识科普</a>
+    <span aria-hidden="true">/</span>
+    <span>{{ topic.category }}</span>
+  </nav>
+
+  <article class="article-card" data-article-topic="{{ topic.slug }}">
+    <header class="article-header">
+      <p class="eyebrow">{{ topic.category }} · {{ topic.reading_minutes }} 分钟阅读</p>
+      <h1>{{ topic.title }}</h1>
+      <p class="page-lead">{{ topic.summary }}</p>
+      <div class="article-status-row">
+        <span class="read-badge" data-article-read-badge hidden>已读</span>
+        <button class="button button-secondary" type="button" data-mark-read data-topic-slug="{{ topic.slug }}" data-topic-title="{{ topic.title }}">标记为已读</button>
+        <span class="muted" data-read-status role="status" aria-live="polite"></span>
+      </div>
+    </header>
+
+    <div class="scenario-box">
+      <p class="scenario-label">校园情境</p>
+      <p>{{ topic.scenario }}</p>
+    </div>
+
+    <div class="article-body-copy">
+      {% for paragraph in topic.concept %}
+      <p>{{ paragraph }}</p>
+      {% endfor %}
+    </div>
+
+    <section class="article-example" aria-labelledby="example-title">
+      <p class="eyebrow">小算例</p>
+      <h2 id="example-title">{{ topic.example_title }}</h2>
+      {% for paragraph in topic.example %}
+      <p>{{ paragraph }}</p>
+      {% endfor %}
+    </section>
+
+    <section class="article-actions" aria-labelledby="actions-title">
+      <p class="eyebrow">可以马上做</p>
+      <h2 id="actions-title">把判断变成具体动作</h2>
+      <ul>
+        {% for action in topic.actions %}
+        <li>{{ action }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="article-sources" aria-labelledby="sources-title">
+      <p class="eyebrow">资料依据</p>
+      <h2 id="sources-title">来源与边界</h2>
+      <ul>
+        {% for source in topic.sources %}
+        <li>
+          <strong>{{ source.name }}</strong>
+          <span>{{ source.issuer }} · {{ source.note }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <p>{{ source_note }}</p>
+      <p>本文用于一般性金融知识学习，不构成针对任何个人的投资、借款或产品选择建议，也不声称经过心理测量学认证。</p>
+    </section>
+
+    <footer class="article-footer">
+      <a class="text-link" href="{{ url_for('platform.learn') }}">← 返回全部主题</a>
+      <div class="article-pagination">
+        {% if previous_topic %}
+        <a href="{{ url_for('platform.learn_topic', slug=previous_topic.slug) }}">上一篇：{{ previous_topic.title }}</a>
+        {% endif %}
+        {% if next_topic %}
+        <a href="{{ url_for('platform.learn_topic', slug=next_topic.slug) }}">下一篇：{{ next_topic.title }} →</a>
+        {% endif %}
+      </div>
+    </footer>
+  </article>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "platform_base.html" %}
+{% block title %}金融知识科普｜信跃{% endblock %}
+{% block body_class %}learn-body{% endblock %}
+{% block content %}
+<div class="page-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>知识科普</span>
+  </nav>
+
+  <header class="learn-hero">
+    <div>
+      <p class="eyebrow">{{ topic_count }} 个短主题 · 每篇约 3—5 分钟</p>
+      <h1>把金融概念放回校园生活</h1>
+      <p class="page-lead">
+        从生活费预算、分期成本到冒充客服和征信骗局，每篇都用一个小情境解释概念，再给出可以马上使用的判断步骤。
+      </p>
+    </div>
+    <div class="learn-progress-card">
+      <p>当前浏览器阅读进度</p>
+      <strong><span data-learning-read-count>0</span> / {{ topic_count }}</strong>
+      <progress data-learning-read-progress max="{{ topic_count }}" value="0">{{ topic_count }} 个主题</progress>
+      <a href="{{ url_for('platform.my_learning') }}">查看我的学习</a>
+    </div>
+  </header>
+
+  <div class="notice notice-info">
+    科普内容用于一般性学习，不构成投资、借款或产品选择建议。具体业务请以现行合同、费用表和机构官方说明为准。
+  </div>
+
+  <div class="learn-grid">
+    {% for topic in topics %}
+    <a class="learn-card" href="{{ url_for('platform.learn_topic', slug=topic.slug) }}" data-learning-topic="{{ topic.slug }}">
+      <div class="learn-card-top">
+        <span class="learn-number">{{ topic.number }}</span>
+        <span class="learn-category">{{ topic.category }}</span>
+        <span class="read-badge" hidden>已读</span>
+      </div>
+      <h2>{{ topic.title }}</h2>
+      <p>{{ topic.summary }}</p>
+      <div class="learn-card-foot">
+        <span>{{ topic.reading_minutes }} 分钟阅读</span>
+        <span aria-hidden="true">→</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="learn-footer-note">
+    <p>{{ source_note }}</p>
+    <p>阅读记录只保存在当前浏览器；清除浏览器数据后会丢失。</p>
+  </div>
+</div>
+{% endblock %}

@@ -26,7 +26,7 @@ def finish(client, public_id, token, *, form=None, manifest=None):
 
 
 def test_original_eight_page_flow_and_local_assets(client):
-    page = client.get("/").get_data(as_text=True)
+    page = client.get("/apply").get_data(as_text=True)
     assert re.findall(r'class="form-page" data-page="(\d+)"', page) == [str(i) for i in range(1, 9)]
     for field in ("total_debt", "debt_ratio", "interest_rate", "loan_term", "interest_rate_confirmed"):
         assert f'id="{field}"' in page

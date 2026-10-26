@@ -1,0 +1,126 @@
+{% extends "platform_base.html" %}
+{% block title %}项目与数据说明｜信跃{% endblock %}
+{% block body_class %}about-body{% endblock %}
+{% block content %}
+<div class="page-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>项目与数据说明</span>
+  </nav>
+
+  <header class="page-hero page-hero-compact">
+    <p class="eyebrow">信跃大学生创新训练项目</p>
+    <h1>学习工具、科普内容与研究申请，边界分开说明</h1>
+    <p class="page-lead">
+      信跃面向大学生，提供金融素养学习内容和一次不产生真实借贷的申请体验。平台不以“预测谁是高风险借款人”为目标，也不生成个人信用等级。
+    </p>
+    <p class="version-line">
+      学习平台版本 <code>{{ platform_version }}</code> · 学习测评版本 <code>{{ learning_assessment_version }}</code>
+    </p>
+  </header>
+
+  <div class="about-layout">
+    <section class="about-section" aria-labelledby="about-modules">
+      <p class="eyebrow">平台内容</p>
+      <h2 id="about-modules">四个学习模块与研究申请</h2>
+      <div class="about-grid">
+        <div>
+          <h3>金融素养测评</h3>
+          <p>16 道平台自编学习题，覆盖预算与储蓄、借贷与成本、金融安全、风险与权益。答完显示正确率、主题表现和解释，用于提示下一步学习。</p>
+        </div>
+        <div>
+          <h3>知识科普</h3>
+          <p>12 个短主题，采用“校园情境—概念解释—小算例—行动提示—来源”的结构。内容不推荐具体金融产品或平台。</p>
+        </div>
+        <div>
+          <h3>学习工具</h3>
+          <p>借贷成本试算、生活费预算和反诈情境判断。输入只在当前浏览器计算，不上传服务器。</p>
+        </div>
+        <div>
+          <h3>信贷申请体验</h3>
+          <p>独立保留的 8 页科研模拟申请，包含知情同意、申请信息、条款确认、信息核对和 29 题还款看法量表。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section boundary-section" aria-labelledby="about-separation">
+      <p class="eyebrow">数据边界</p>
+      <h2 id="about-separation">学习记录和研究数据不是同一份数据</h2>
+      <div class="boundary-grid">
+        <div>
+          <h3>学习模块</h3>
+          <ul>
+            <li>测评答案、阅读标记、工具使用状态保存在当前浏览器的本地存储。</li>
+            <li>不会上传到研究数据库，不进入分析 CSV。</li>
+            <li>不安装研究行为追踪脚本，不记录键入正文、剪贴板或设备指纹。</li>
+            <li>不需要注册账号，也不做跨设备同步。</li>
+          </ul>
+        </div>
+        <div>
+          <h3>信贷申请体验</h3>
+          <ul>
+            <li>只有阅读参与说明并主动勾选同意后，才创建研究参与会话。</li>
+            <li>保存申请信息、29 题量表原始答案、服务器计分快照，以及已说明的页面和字段操作事件。</li>
+            <li>不记录真实姓名、证件、银行卡、通讯录、剪贴板内容或完整按键正文。</li>
+            <li>最终提交以服务器保存回执为准；失败时可以保留答案并重试。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" aria-labelledby="about-assessment">
+      <p class="eyebrow">测评说明</p>
+      <h2 id="about-assessment">“金融素养测评”是什么，以及不是什么</h2>
+      <p>
+        这份测评参考了金融素养研究中“知识、行为与态度”的常见框架，题目由平台自行编写，目的是帮助学习者发现需要复习的概念。它不是复制 OECD 官方题库，也不是经过心理测量学认证的标准化测验。
+      </p>
+      <p>
+        正确率只表示这次学习测验中答对的比例，不表示个人信用水平、还款能力或未来金融行为。选择“暂不确定”或未作答的题目不会算作正确；结果会同时报告完成度，避免把跳过当成真实错误答案。
+      </p>
+      <p>
+        研究申请中的 29 题还款看法量表是另一套测量工具。它保持原题项、顺序和反向题计分规则，不因为学习模块而改名或改成“金融素养分数”。研究招募链接可以直接进入申请，主要测量完成前不强制学习。
+      </p>
+    </section>
+
+    <section class="about-section" aria-labelledby="about-limits">
+      <p class="eyebrow">实现边界</p>
+      <h2 id="about-limits">平台不做什么</h2>
+      <ul class="about-limits-list">
+        <li>不提供真实贷款、征信查询、授信审批或资金交易。</li>
+        <li>不生成个人违约概率、信用等级、授信额度或风险定价。</li>
+        <li>不把学习测评结果写入申请表，也不根据学习表现改变申请条款。</li>
+        <li>不把 29 题量表结果包装成已通过验证的信用评分。</li>
+        <li>当前不启用 RRT 敏感问题模块；后续若启用，必须独立建表和单独说明。</li>
+        <li>不展示没有证据的服务人数、合作机构或“超过同龄人”等比较。</li>
+      </ul>
+    </section>
+
+    <section class="about-section" aria-labelledby="about-sources">
+      <p class="eyebrow">资料与方法</p>
+      <h2 id="about-sources">参考资料</h2>
+      <ul class="source-list">
+        <li><strong>OECD/INFE 金融素养测量与教育框架</strong><span>用于知识、行为与态度模块的概念参考，不复制官方题目，不声称获得认证。</span></li>
+        <li><strong>中国人民银行公告〔2021〕第3号</strong><span>关于贷款年化利率明示的要求，用于借贷成本相关内容的解释框架。</span></li>
+        <li><strong>中国人民银行金融消费者权益保护相关内容</strong><span>用于金融消费者风险提示与权益说明。</span></li>
+        <li><strong>《中华人民共和国个人信息保护法》</strong><span>用于授权、必要性和个人信息保护相关内容。</span></li>
+        <li><strong>《征信业管理条例》</strong><span>用于征信记录和异议处理相关内容。</span></li>
+        <li><strong>国家反诈中心公开防范提示</strong><span>用于冒充客服、征信修复、保证金等诈骗情境。</span></li>
+      </ul>
+      <p>页面内容整理日期：2026-10-26。法规、监管要求和机构流程可能更新，具体业务应以现行有效文本和合同为准。</p>
+    </section>
+
+    <section class="about-section contact-section" aria-labelledby="about-contact">
+      <p class="eyebrow">反馈与联系</p>
+      <h2 id="about-contact">怎样反馈问题或撤回研究数据</h2>
+      <p>
+        学习模块不收集可识别个人身份的信息，因此无法通过本页找回某位访客的本地学习记录。若要反馈内容、报告故障，或撤回已提交的申请数据，请使用招募通知中项目负责人提供的联系方式，并提供参与编号。
+      </p>
+      <div class="about-actions">
+        <a class="button button-primary" href="{{ url_for('platform.assessment') }}">开始学习测评</a>
+        <a class="button button-secondary" href="{{ url_for('platform.apply') }}">进入申请体验</a>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

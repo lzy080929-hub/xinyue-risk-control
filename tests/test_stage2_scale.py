@@ -90,7 +90,7 @@ def login_admin(client) -> None:
 
 
 def test_participant_page_shows_fixed_29_items_and_likert_legend(client):
-    response = client.get("/")
+    response = client.get("/apply")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
 

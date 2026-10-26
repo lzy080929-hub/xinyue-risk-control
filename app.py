@@ -14,18 +14,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 import admin_routes
 import participant_routes
-from config import (
-    BEHAVIOR_METRICS_VERSION,
-    CONSENT_VERSION,
-    EXPERIMENT_VERSION,
-    FORM_VERSION,
-    SCALE_VERSION,
-    build_runtime_config,
-)
+import platform_routes
+from config import build_runtime_config
 from errors import ApiError
 from extensions import db, migrate
 from security import LoginRateLimiter, api_error_response
-from survey import LIKERT_LABELS, SURVEY_ITEMS
 from models import ParticipantSession
 
 
@@ -65,26 +58,8 @@ def create_app(test_config: dict | None = None) -> Flask:
         )
 
     app.register_blueprint(participant_routes.bp)
+    app.register_blueprint(platform_routes.bp)
     app.register_blueprint(admin_routes.bp)
-
-    @app.get("/")
-    def index():
-        test_mode = bool(
-            app.config.get("ALLOW_TEST_MODE")
-            and request.args.get("test") == "1"
-        )
-        return render_template(
-            "original_application.html",
-            consent_version=CONSENT_VERSION,
-            experiment_version=EXPERIMENT_VERSION,
-            scale_version=SCALE_VERSION,
-            behavior_metrics_version=BEHAVIOR_METRICS_VERSION,
-            form_version=FORM_VERSION,
-            ui_version=app.config["UI_VERSION"],
-            test_mode=test_mode,
-            survey_items=tuple(enumerate(SURVEY_ITEMS, start=1)),
-            likert_labels=LIKERT_LABELS,
-        )
 
     @app.get("/favicon.ico")
     def favicon():

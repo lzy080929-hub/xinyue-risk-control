@@ -613,14 +613,14 @@ def test_legacy_collect_endpoint_returns_gone(client):
 
 
 def test_explicit_test_mode_is_visible_and_configurable(app, client):
-    response = client.get("/?test=1")
+    response = client.get("/?test=1", follow_redirects=True)
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert 'data-is-test="true"' in html
     assert "测试模式" in html
 
     app.config["ALLOW_TEST_MODE"] = False
-    disabled = client.get("/?test=1")
+    disabled = client.get("/?test=1", follow_redirects=True)
     html = disabled.get_data(as_text=True)
     assert 'data-is-test="false"' in html
     assert "测试模式：</strong>本次创建的是测试会话" not in html

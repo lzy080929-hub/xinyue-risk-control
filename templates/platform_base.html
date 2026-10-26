@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="信跃大学生金融素养成长平台：学习预算、借贷成本、金融安全与风险权益。" />
+  <title>{% block title %}信跃｜大学生金融素养成长平台{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='platform.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body class="platform-body {% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <header class="platform-header">
+    <div class="platform-header-inner">
+      <a class="platform-brand" href="{{ url_for('platform.home') }}" aria-label="信跃大学生金融素养成长平台首页">
+        <span class="platform-brand-mark" aria-hidden="true">信</span>
+        <span class="platform-brand-text">
+          <strong>信跃</strong>
+          <small>大学生金融素养成长平台</small>
+        </span>
+      </a>
+      <nav class="platform-nav" aria-label="主要导航">
+        <a href="{{ url_for('platform.home') }}"{% if active_page == 'home' %} class="is-active" aria-current="page"{% endif %}>首页</a>
+        <a href="{{ url_for('platform.assessment') }}"{% if active_page == 'assessment' %} class="is-active" aria-current="page"{% endif %}>素养测评</a>
+        <a href="{{ url_for('platform.learn') }}"{% if active_page == 'learn' %} class="is-active" aria-current="page"{% endif %}>知识科普</a>
+        <a href="{{ url_for('platform.apply') }}"{% if active_page == 'apply' %} class="is-active" aria-current="page"{% endif %}>申请体验</a>
+        <a href="{{ url_for('platform.tools') }}"{% if active_page == 'tools' %} class="is-active" aria-current="page"{% endif %}>学习工具</a>
+        <a href="{{ url_for('platform.my_learning') }}"{% if active_page == 'my-learning' %} class="is-active" aria-current="page"{% endif %}>我的学习</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="platform-footer">
+    <div class="platform-footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">信跃</p>
+        <p>大学生金融素养成长平台</p>
+        <p class="footer-note">从一笔生活费开始，练习看懂借贷成本与风险。</p>
+      </div>
+      <div class="footer-links">
+        <p class="footer-heading">平台</p>
+        <a href="{{ url_for('platform.assessment') }}">金融素养测评</a>
+        <a href="{{ url_for('platform.learn') }}">知识科普</a>
+        <a href="{{ url_for('platform.tools') }}">学习工具</a>
+        <a href="{{ url_for('platform.my_learning') }}">我的学习</a>
+      </div>
+      <div class="footer-links">
+        <p class="footer-heading">研究与说明</p>
+        <a href="{{ url_for('platform.apply') }}">信贷申请体验</a>
+        <a href="{{ url_for('platform.about') }}">项目与数据说明</a>
+        <a href="{{ url_for('admin.login') }}">研究者入口 ↗</a>
+      </div>
+      <div class="footer-boundary">
+        <p class="footer-heading">重要说明</p>
+        <p>学习测评与科普为平台自编内容，不是标准化金融素养认证，也不构成投资或借贷建议。</p>
+        <p>信贷申请体验为科研模拟，不提供真实贷款、个人信用评分、信用等级或违约概率。</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>信跃大学生创新训练项目</p>
+      <p>学习记录只保存在当前浏览器，不进入研究数据库。</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='platform.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

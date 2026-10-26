@@ -1,0 +1,198 @@
+{% extends "platform_base.html" %}
+{% block title %}学习工具｜信跃{% endblock %}
+{% block body_class %}tools-body{% endblock %}
+{% block content %}
+<div class="page-width">
+  <nav class="page-breadcrumb" aria-label="面包屑">
+    <a href="{{ url_for('platform.home') }}">首页</a>
+    <span aria-hidden="true">/</span>
+    <span>学习工具</span>
+  </nav>
+
+  <header class="page-hero page-hero-compact">
+    <p class="eyebrow">自己输入，自己核对</p>
+    <h1>把金融概念放进具体数字</h1>
+    <p class="page-lead">
+      试算借款成本、安排一个月的生活费，再练习识别几种常见诈骗话术。所有输入只在当前浏览器内计算，不会上传。
+    </p>
+  </header>
+
+  <nav class="tool-jump" aria-label="工具目录">
+    <a href="#loan-calculator">借贷成本试算</a>
+    <a href="#budget-tool">生活费预算</a>
+    <a href="#scam-practice">反诈情境判断</a>
+  </nav>
+
+  <noscript>
+    <div class="notice notice-warning">这些工具需要启用 JavaScript 才能在浏览器内计算；本页不会向服务器提交输入。</div>
+  </noscript>
+
+  <section id="loan-calculator" class="tool-card" aria-labelledby="loan-title">
+    <div class="tool-heading">
+      <div>
+        <p class="eyebrow">工具 01</p>
+        <h2 id="loan-title">借贷成本试算</h2>
+      </div>
+      <p>按月等额本息、无其他费用的教学假设。不是任何机构报价，也不包含手续费、保险费或提前还款费用。</p>
+    </div>
+
+    <div class="tool-grid">
+      <div class="tool-inputs">
+        <label for="loan-principal">借款本金（元）</label>
+        <input id="loan-principal" type="number" inputmode="decimal" min="100" max="1000000" step="100" value="10000" />
+        <label for="loan-months">期限（月）</label>
+        <input id="loan-months" type="number" inputmode="numeric" min="1" max="120" step="1" value="12" />
+        <label for="loan-rate">名义年利率（%）</label>
+        <input id="loan-rate" type="number" inputmode="decimal" min="0" max="60" step="0.1" value="6" />
+        <button id="loan-calculate" class="button button-primary" type="button">按这些条件试算</button>
+        <p id="loan-error" class="inline-error" role="alert" hidden></p>
+      </div>
+
+      <div class="tool-output" aria-live="polite">
+        <div class="output-lead">
+          <span>预计每月还款</span>
+          <strong id="loan-monthly">—</strong>
+        </div>
+        <dl class="output-list">
+          <div><dt>总还款</dt><dd id="loan-total">—</dd></div>
+          <div><dt>总利息</dt><dd id="loan-interest">—</dd></div>
+          <div><dt>按月复利折算的有效年化率</dt><dd id="loan-effective">—</dd></div>
+        </dl>
+        <p class="output-note" id="loan-note">
+          计算口径：月利率 = 名义年利率 ÷ 12；月供按等额本息公式计算，结果四舍五入到分。未计入手续费、保险费、提前还款费用等其他成本。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="budget-tool" class="tool-card" aria-labelledby="budget-title">
+    <div class="tool-heading">
+      <div>
+        <p class="eyebrow">工具 02</p>
+        <h2 id="budget-title">生活费预算</h2>
+      </div>
+      <p>用你愿意输入的金额看看分配结果。所有数字都是个人输入，不会上传；0 与留空是不同含义。</p>
+    </div>
+
+    <div class="tool-grid">
+      <div class="tool-inputs budget-inputs">
+        <label for="budget-income">每月可支配金额（元）</label>
+        <input id="budget-income" type="number" inputmode="decimal" min="0" step="50" value="3000" />
+        <label for="budget-essential">必要支出（元）</label>
+        <input id="budget-essential" type="number" inputmode="decimal" min="0" step="50" value="1800" />
+        <label for="budget-flexible">计划灵活支出（元）</label>
+        <input id="budget-flexible" type="number" inputmode="decimal" min="0" step="50" value="600" />
+        <label for="budget-savings">计划储蓄或缓冲（元）</label>
+        <input id="budget-savings" type="number" inputmode="decimal" min="0" step="50" value="300" />
+        <button id="budget-calculate" class="button button-primary" type="button">查看这个分配</button>
+        <p id="budget-error" class="inline-error" role="alert" hidden></p>
+      </div>
+
+      <div class="tool-output" aria-live="polite">
+        <div class="output-lead">
+          <span>未分配余额</span>
+          <strong id="budget-remaining">—</strong>
+        </div>
+        <p id="budget-summary" class="output-note"></p>
+        <div class="budget-bars" id="budget-bars">
+          <div class="budget-bar-row">
+            <div><span>必要支出</span><strong id="budget-essential-value">—</strong></div>
+            <progress id="budget-essential-bar" value="0" max="100" aria-label="必要支出占比">0%</progress>
+          </div>
+          <div class="budget-bar-row">
+            <div><span>灵活支出</span><strong id="budget-flexible-value">—</strong></div>
+            <progress id="budget-flexible-bar" value="0" max="100" aria-label="灵活支出占比">0%</progress>
+          </div>
+          <div class="budget-bar-row">
+            <div><span>储蓄或缓冲</span><strong id="budget-savings-value">—</strong></div>
+            <progress id="budget-savings-bar" value="0" max="100" aria-label="储蓄或缓冲占比">0%</progress>
+          </div>
+          <div class="budget-bar-row">
+            <div><span>未分配</span><strong id="budget-open-value">—</strong></div>
+            <progress id="budget-open-bar" value="0" max="100" aria-label="未分配余额占比">0%</progress>
+          </div>
+        </div>
+        <p class="output-note">
+          日均可用按“未分配余额 ÷ 30”估算，只用于演示。应急资金常见的“3—6 个月必要支出”只是参考区间，不是统一标准。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="scam-practice" class="tool-card" aria-labelledby="scam-title">
+    <div class="tool-heading">
+      <div>
+        <p class="eyebrow">工具 03</p>
+        <h2 id="scam-title">反诈情境判断</h2>
+      </div>
+      <p>先选择你会采取的行动。每个情境都会说明为什么某些做法更危险；本练习不记录选择，只更新本浏览器的学习进度。</p>
+    </div>
+
+    <div class="scam-grid">
+      <article class="scam-scenario" data-scam>
+        <p class="scam-index">情境 01</p>
+        <h3>“你的账户异常，请告诉我短信验证码”</h3>
+        <div class="scam-options">
+          <button class="scam-option" type="button" data-correct="false">把验证码告诉对方，尽快处理异常</button>
+          <button class="scam-option" type="button" data-correct="true">挂断，自己打开官方 App 或官网核实</button>
+          <button class="scam-option" type="button" data-correct="false">先加私人微信，再发身份证照片</button>
+        </div>
+        <div class="scam-feedback" hidden role="status">
+          <p class="feedback-good" hidden>正确处理：验证码不能提供给任何人。自己找到官方入口再核实身份。</p>
+          <p class="feedback-bad" hidden>这个做法会扩大风险。验证码是账户凭证，陌生人索要时就应停止操作。</p>
+        </div>
+      </article>
+
+      <article class="scam-scenario" data-scam>
+        <p class="scam-index">情境 02</p>
+        <h3>“付一笔解冻费，贷款马上到账”</h3>
+        <div class="scam-options">
+          <button class="scam-option" type="button" data-correct="false">先交钱，放款后再取回</button>
+          <button class="scam-option" type="button" data-correct="true">停止转账，核对机构资质和官方客服</button>
+          <button class="scam-option" type="button" data-correct="false">把银行卡密码发过去证明身份</button>
+        </div>
+        <div class="scam-feedback" hidden role="status">
+          <p class="feedback-good" hidden>正确判断：放款前以解冻费、保证金、验资费为名要求转账，是需要高度警惕的诈骗信号。</p>
+          <p class="feedback-bad" hidden>这个做法可能造成直接资金损失。正规机构不会通过私人联系方式要求你转账“解冻”。</p>
+        </div>
+      </article>
+
+      <article class="scam-scenario" data-scam>
+        <p class="scam-index">情境 03</p>
+        <h3>“我们可以帮你删除征信不良记录”</h3>
+        <div class="scam-options">
+          <button class="scam-option" type="button" data-correct="false">支付费用，让对方内部操作</button>
+          <button class="scam-option" type="button" data-correct="false">把身份证和银行卡照片发给对方</button>
+          <button class="scam-option" type="button" data-correct="true">不付款，通过官方渠道了解异议处理</button>
+        </div>
+        <div class="scam-feedback" hidden role="status">
+          <p class="feedback-good" hidden">正确判断：征信异议有正规流程，收费“删除记录”或“修复征信”是常见骗局话术。</p>
+          <p class="feedback-bad" hidden>这会同时带来资金和信息泄露风险。不要向陌生中介支付“修复”费用或提交敏感资料。</p>
+        </div>
+      </article>
+
+      <article class="scam-scenario" data-scam>
+        <p class="scam-index">情境 04</p>
+        <h3>“开启屏幕共享，我教你怎么操作”</h3>
+        <div class="scam-options">
+          <button class="scam-option" type="button" data-correct="true">拒绝共享，自己从官方入口操作</button>
+          <button class="scam-option" type="button" data-correct="false">共享屏幕，但只看不操作</button>
+          <button class="scam-option" type="button" data-correct="false">按对方要求下载远程控制软件</button>
+        </div>
+        <div class="scam-feedback" hidden role="status">
+          <p class="feedback-good" hidden>正确判断：屏幕共享可能暴露验证码、余额和操作过程，远程控制还可能让陌生人直接操作账户。</p>
+          <p class="feedback-bad" hidden>这个做法会让你失去对账户操作的控制。不要开启屏幕共享或安装陌生人指定的远程控制软件。</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <div class="learn-footer-note">
+    <p>工具只用于学习演示，不构成针对个人的财务、投资或借贷建议。具体产品请核对合同、费用表和官方说明。</p>
+    <p>所有输入仅在本浏览器内计算；页面不会请求服务器保存这些数字。</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='tools.js') }}" defer></script>
+{% endblock %}

@@ -18,6 +18,21 @@ def test_packaged_release_can_migrate_without_source_files(tmp_path):
         assert '.env' not in names
         assert not any(name.startswith(('.tools/', 'instance/', 'verification_artifacts/')) for name in names)
         assert not any(Path(name).suffix in {'.db', '.sqlite3'} for name in names)
+        for expected in (
+            'platform_routes.py',
+            'platform_content.py',
+            'static/platform.css',
+            'static/platform.js',
+            'static/assessment.js',
+            'static/tools.js',
+            'static/my_learning.js',
+            'templates/platform/home.html',
+            'templates/platform/assessment.html',
+            'templates/platform_base.html',
+            'docs/screenshots/platform-home-desktop.png',
+            'docs/screenshots/platform-assessment-result-mobile.png',
+        ):
+            assert expected in names, expected
         package.extractall(checkout)
     environment = os.environ.copy()
     for key in ('SECRET_KEY', 'ADMIN_USERNAME', 'ADMIN_PASSWORD_HASH'):

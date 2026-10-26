@@ -10,6 +10,26 @@
 
 时间戳以UTC带Z导出，后台按北京时间显示。所有`*_ms`单位为毫秒。空白通常表示未作答、未观察或历史版本未采集；不要统一替换为0。`is_test`和确认字段导出为0/1。
 
+## 学习平台本地数据（不属于研究数据）
+
+公共学习平台的版本标识为`platform-v1`与`literacy-learning-v1`，与研究申请的实验、表单、量表、行为版本分开。学习平台不创建参与会话、不调用研究API、不写数据库，也不进入分析CSV或申请阶段行为明细；本轮没有新增研究数据库迁移。
+
+浏览器`localStorage`键`xinyue.learning.v1`仅保存以下摘要，供“我的学习”显示：
+
+| 本地字段 | 含义 |
+| --- | --- |
+| `schema` / `updatedAt` | 本地记录结构和最近写入时间 |
+| `platformVersion` / `assessmentVersion` | `platform-v1` / `literacy-learning-v1` |
+| `assessment.version` | 生成该摘要的学习测评版本，当前为`literacy-learning-v1` |
+| `assessment.completedAt` | 最近一次完成学习测评的时间 |
+| `assessment.score` / `total` / `answered` | 答对题数、总题数（16）、已选择题数（含“暂不确定”） |
+| `assessment.topics` | 各主题的`slug`、名称、答对数和主题总题数 |
+| `assessment.recommendations` | 建议复习主题的`slug`与名称，不含原始作答 |
+| `readTopics` | 已标记为已读的科普主题slug与本地时间 |
+| `tools` | 借贷成本、预算、反诈工具是否使用过的本地时间 |
+
+学习测评的逐题选择、计算器输入和反诈选择不上传，也不写入该键；该键不包含研究参与编号、申请表单字段、量表答案或行为事件。清除浏览器数据或点击“我的学习”中的清除按钮会丢失这些记录，不能用它恢复或核对正式研究样本。浏览器禁用本地存储时，学习页仍可当前显示结果，但不能跨刷新保存。
+
 ## 申请字段
 
 | 字段 | 含义与范围 |
