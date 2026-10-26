@@ -44,6 +44,7 @@
     "runtime.txt",
     "scripts/backup_local.py",
     "scripts/hash_admin_password.py",
+    "scripts/open_local.ps1",
     "scripts/package_release.py",
     "scripts/start_production.py",
     "scripts/verify_browser.py",
@@ -74,7 +75,8 @@
     "tests/test_stage2_scale.py",
     "tests/test_survey_scoring.py",
     "tests/test_system_config.py",
-    "validation.py"
+    "validation.py",
+    "启动信跃网页.cmd"
   ],
   "runtime_data_included": false
 }

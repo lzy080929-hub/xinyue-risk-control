@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ["app.py", "admin_routes.py", "participant_routes.py", "behavior.py", "research_export.py",
     "config.py", "models.py", "extensions.py", "security.py", "validation.py", "survey.py", "errors.py",
     "requirements-web.txt", "requirements-render.txt", "requirements-dev.txt", "requirements-browser.txt", "pytest.ini", "render.yaml", "Procfile", "runtime.txt",
-    ".env.example", ".gitignore", ".python-version", "AGENTS.md", "README.md", "DEPLOY_RENDER.md", "start_local.ps1"]
+    ".env.example", ".gitignore", ".python-version", "AGENTS.md", "README.md", "DEPLOY_RENDER.md", "start_local.ps1", "启动信跃网页.cmd"]
 ASSETS = ["original.css", "bank-interface.css", "original_application.js", "behavior_tracker.js", "admin_dashboard.js", "styles.css", "favicon.svg"]
 
 
@@ -17,7 +17,7 @@ def main():
     files += [ROOT / "static" / name for name in ASSETS]
     files += list((ROOT / "templates").glob("*.html"))
     files += [p for p in (ROOT / "migrations").rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".mako"}]
-    files += [ROOT / "scripts" / name for name in ["start_production.py", "backup_local.py", "hash_admin_password.py", "package_release.py", "verify_browser.py", "verify_deployment.py"]]
+    files += [ROOT / "scripts" / name for name in ["start_production.py", "backup_local.py", "hash_admin_password.py", "package_release.py", "verify_browser.py", "verify_deployment.py", "open_local.ps1"]]
     files += [ROOT / "docs" / "screenshots" / name for name in ["desktop-consent.png", "mobile-consent.png", "mobile-finance.png", "mobile-survey.png", "mobile-receipt.png"]]
     files += list((ROOT / "docs").glob("*.md"))
     files += list((ROOT / "tests").glob("*.py"))

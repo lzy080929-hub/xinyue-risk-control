@@ -26,3 +26,4 @@ data/behavior_logs.csv
 
 model_plots/
 dist/
+.tools/
